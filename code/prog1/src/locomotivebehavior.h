@@ -11,6 +11,12 @@
 #include "launchable.h"
 #include "sharedsectioninterface.h"
 
+#include <vector>
+#include <utility>
+
+#define INCOMING_BUFFER 2
+#define OUTGOING_BUFFER 1
+
 /**
  * @brief La classe LocomotiveBehavior représente le comportement d'une locomotive
  */
@@ -21,8 +27,8 @@ public:
      * \brief locomotiveBehavior Constructeur de la classe
      * \param loco la locomotive dont on représente le comportement
      */
-    LocomotiveBehavior(Locomotive& loco, std::shared_ptr<SharedSectionInterface> sharedSection, std::vector<Pair<int, int>> sharedSectionDirections), std::vector<int> contacts, int stationContact
-        : loco(loco), sharedSection(sharedSection), sharedSectionDirections(sharedSectionDirections), contacts(contacts), stationContact(stationContact) {
+    LocomotiveBehavior(Locomotive& loco, std::shared_ptr<SharedSectionInterface> sharedSection, std::vector<std::pair<int, int>> sharedSectionDirections, bool isWrittenForward, bool isGoingForward, std::vector<int> contacts, int stationContact)
+        : loco(loco), sharedSection(sharedSection), sharedSectionDirections(sharedSectionDirections), contacts(contacts), stationContact(stationContact), isWritenForward(isWrittenForward), directionIsForward(isGoingForward) {
         int entrance = sharedSection.getEntrance();
         int exit = sharedSection.getExit();
 
@@ -34,13 +40,13 @@ public:
         }
 
         auto it2 = std::find(contacts.begin(), contacts.end(), entrance);
-        int entranceIndex = -1;
+        entranceIndex = -1;
         if(it2 != contacts.end()) {
             entranceIndex = std::distance(contacts.begin(), it2);
         }
 
         auto it3 = std::find(contacts.begin(), contacts.end(), exit);
-        int exitIndex = -1;
+        exitIndex = -1;
         if(it3 != contacts.end()) {
             exitIndex = std::distance(contacts.begin(), it3);
         }
@@ -49,9 +55,30 @@ public:
             throw std::runtime_error("Invalid contacts");
         }
 
-        directionIsForward = entranceIndex < exitIndex;
+        bool sharedSectionIsCut = (entranceIndex > exitIndex) && !isWritenForward || (entranceIndex < exitIndex) && isWritenForward;
 
+        bool stationError;
 
+        if (isWritenForward) {
+            stationError = sharedSectionIsCut 
+                   ? (stationIndex > entranceIndex || stationIndex < exitIndex)
+                   : (stationIndex < entranceIndex || stationIndex > exitIndex);
+        } else {
+            stationError = sharedSectionIsCut 
+                   ? (stationIndex < entranceIndex || stationIndex > exitIndex)
+                   : (stationIndex > entranceIndex || stationIndex < exitIndex);
+        }
+
+        if (stationError) {
+            throw std::runtime_error("Invalid station contact");
+        }
+
+        int sizeOfSharedSection = sharedSectionIsCut ? contacts.size() - entranceIndex + exitIndex + 1 : exitIndex - entranceIndex + 1;
+
+        if (contacts.size() < sizeOfSharedSection + INCOMING_BUFFER + OUTGOING_BUFFER) {
+            throw std::runtime_error("Invalid shared section");
+        }
+        determineContactPoints();
     }
 
 protected:
@@ -89,8 +116,9 @@ protected:
     int stationContact;
     int sharedSectionReserveContact;
     int sharedSectionReleaseContact;
-    std::vector<Pair<int, int>> sharedSectionDirections;
-    bool directionIsForward = true;
+    std::vector<std::pair<int, int>> sharedSectionDirections;
+    bool directionIsForward;
+    bool isWritenForward;
 
     int entranceIndex;
     int exitIndex;

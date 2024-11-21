@@ -15,6 +15,9 @@
 #include "ctrain_handler.h"
 #include "sharedsectioninterface.h"
 
+#include <vector>
+#include <utility>
+
 /**
  * @brief La classe SharedSection implémente l'interface SharedSectionInterface qui
  * propose les méthodes liées à la section partagée.
@@ -40,7 +43,7 @@ public:
      * la locomotive redémarée. (méthode à appeler un contact avant la section partagée).
      * @param loco La locomotive qui essaie accéder à la section partagée
      */
-    void access(Locomotive &loco, std::vector<Pair<int, int>> directions) override {
+    void access(Locomotive &loco, std::vector<std::pair<int, int>> directions) override {
         
         semaphore.acquire();
 
@@ -81,7 +84,7 @@ private:
     int entrance;
     int exit;
 
-    PCO::Semaphore semaphore;
+    PcoSemaphore semaphore;
 };
 
 

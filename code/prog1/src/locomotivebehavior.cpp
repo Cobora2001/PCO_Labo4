@@ -41,8 +41,32 @@ void LocomotiveBehavior::printCompletionMessage()
 }
 
 void LocomotiveBehavior::determineContactPoints() {
-    if(directionIsForward) {
-        sharedSectionReserveContact = contacts[0];
+    int targetIndexEntry;
+    int targetIndexExit;
+
+    if(isWritenForward) {
+        if(directionIsForward) {
+            targetIndexEntry = entranceIndex - INCOMING_BUFFER;
+            targetIndexExit  = exitIndex     + OUTGOING_BUFFER;
+        } else {
+            targetIndexEntry = exitIndex     + INCOMING_BUFFER;
+            targetIndexExit  = entranceIndex - OUTGOING_BUFFER;
+        }
     } else {
+        if(directionIsForward) {
+            targetIndexEntry = exitIndex     - INCOMING_BUFFER;
+            targetIndexExit  = entranceIndex + OUTGOING_BUFFER;
+        } else {
+            targetIndexEntry = entranceIndex + INCOMING_BUFFER;
+            targetIndexExit  = exitIndex     - OUTGOING_BUFFER;
+
+        }
     }
+
+    targetIndexEntry = (targetIndexEntry + contacts.size()) % contacts.size();
+    targetIndexExit  = (targetIndexExit  + contacts.size()) % contacts.size();
+
+
+    sharedSectionReserveContact = contacts[targetIndexEntry];
+    sharedSectionReleaseContact = contacts[targetIndexExit];
 }

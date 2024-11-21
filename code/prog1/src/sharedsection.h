@@ -64,6 +64,14 @@ public:
         afficher_message(qPrintable(QString("The engine no. %1 leaves the shared section.").arg(loco.numero())));
     }
 
+    int getEntrance() {
+        return entrance;
+    }
+
+    int getExit() {
+        return exit;
+    }
+
 private:
 
     /* A vous d'ajouter ce qu'il vous faut */

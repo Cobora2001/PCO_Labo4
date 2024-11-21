@@ -9,5 +9,24 @@
 
 #include "sharedstation.h"
 
-SharedStation::SharedStation(int nbTrains, int nbTours)
-{}
+SharedStation::SharedStation(int nbTrains, int nbTours) : nbTrains(nbTrains), trainsAtStation(0) {
+
+}
+
+void SharedStation::trainArrived() {
+    std::lock_guard<std::mutex> lock(stationMutex);
+    ++trainsAtStation;
+    if(trainsAtStation == nbTrains) {
+        std::this_thread::sleep_for(std::chrono::seconds(2)); // Pause pour montée/descente
+        // Les deux trains sont à la gare, débloquer l'attente
+        for (int i = 1; i < nbTrains; i++) {
+            stationSemaphore.release();
+        }
+
+        trainsAtStation = 0; // Réinitialiser pour la prochaine attente
+        stationMutex.unlock();
+    } else {
+        stationMutex.unlock();
+        stationSemaphore.acquire(); // Attendre que l'autre train soit arrivé
+    }
+}

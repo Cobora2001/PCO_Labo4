@@ -13,6 +13,12 @@ public:
 
 private:
     /* TODO */
+    int nbTrains;
+    int trainsAtStation;
+    std::mutex stationMutex;
+    PcoSemaphore stationSemaphore{0};
+
+    void trainArrived();
 };
 
 #endif // SHARED_STATION_H

@@ -27,8 +27,9 @@ public:
      * @brief SharedSection Constructeur de la classe qui représente la section partagée.
      * Initialisez vos éventuels attributs ici, sémaphores etc.
      */
-    SharedSection() {
-        // TODO
+    SharedSection(int entrance, int exit) {
+        this->entrance = entrance;
+        this->exit = exit;
     }
 
     /**
@@ -39,8 +40,13 @@ public:
      * la locomotive redémarée. (méthode à appeler un contact avant la section partagée).
      * @param loco La locomotive qui essaie accéder à la section partagée
      */
-    void access(Locomotive &loco) override {
-        // TODO
+    void access(Locomotive &loco, std::vector<Pair<int, int>> directions) override {
+        
+        semaphore.acquire();
+
+        for (auto direction : directions) {
+            diriger_aiguillage(direction.first, direction.second, 0);
+        }
 
         // Exemple de message dans la console globale
         afficher_message(qPrintable(QString("The engine no. %1 accesses the shared section.").arg(loco.numero())));
@@ -52,7 +58,7 @@ public:
      * @param loco La locomotive qui quitte la section partagée
      */
     void leave(Locomotive& loco) override {
-        // TODO
+        semaphore.release();
 
         // Exemple de message dans la console globale
         afficher_message(qPrintable(QString("The engine no. %1 leaves the shared section.").arg(loco.numero())));
@@ -64,6 +70,10 @@ private:
 
     // Méthodes privées ...
     // Attribut privés ...
+    int entrance;
+    int exit;
+
+    PCO::Semaphore semaphore;
 };
 
 

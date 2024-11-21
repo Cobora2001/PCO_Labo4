@@ -39,3 +39,10 @@ void LocomotiveBehavior::printCompletionMessage()
     qDebug() << "[STOP] Thread de la loco" << loco.numero() << "a terminé correctement";
     loco.afficherMessage("J'ai terminé");
 }
+
+void LocomotiveBehavior::determineContactPoints() {
+    if(directionIsForward) {
+        sharedSectionReserveContact = contacts[0];
+    } else {
+    }
+}

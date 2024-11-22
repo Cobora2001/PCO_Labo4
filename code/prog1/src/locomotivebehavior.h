@@ -32,7 +32,8 @@ public:
                         bool isWrittenForward, 
                         std::vector<int> contacts,
                         int entrance, int exit,
-                        int trainFirstStart, int trainSecondStart) : 
+                        int trainFirstStart, int trainSecondStart,
+                        int stationContact) : 
         loco(loco), 
         sharedSection(sharedSection), 
         sharedSectionDirections(sharedSectionDirections), 
@@ -48,12 +49,12 @@ public:
 
         calculateEntranceAndExitIndexes();
 
-        int trainFirstIndex = -1;
-        int trainSecondIndex = -1;
+        int trainFirstIndex = getIndexOfContact(trainFirstStart);
+        int trainSecondIndex = getIndexOfContact(trainSecondStart);
 
-        isStartingPositionValid(trainFirstStart, trainSecondStart);
+        isStartingPositionValid(trainFirstIndex, trainSecondIndex);
 
-        directionIsForward = isGoingForward(trainFirstStart, trainSecondStart);
+        directionIsForward = isGoingForward(trainFirstIndex, trainSecondIndex);
 
         bool sharedSectionIsCut = isSharedSectionCut();
 
@@ -64,6 +65,10 @@ public:
         }
 
         determineContactPoints();
+
+        setStationContact(stationContact);
+
+        setNextDestination(trainSecondIndex);
 
         // Select a random number of turns between min and max
         nbOfTurns = rand() % (maxNbOfTurns - minNbOfTurns + 1) + minNbOfTurns;
@@ -95,16 +100,15 @@ protected:
 
     void calculateEntranceAndExitIndexes();
 
-    void setStationContact(int contact);
-
-    int firstIndex = getIndexOfContact(trainFirstStart);
-    int secondIndex = getIndexOfContact(trainSecondStart);
-
     void isStartingPositionValid(int firstIndex, int secondIndex);
 
     bool isGoingForward(int firstIndex, int secondIndex);
 
     int getIndexOfContact(int contact);
+
+    void setNextDestination(int secondStartIndex);
+
+    void setStationContact(int contact);
 
     /**
      * @brief loco La locomotive dont on représente le comportement
@@ -121,8 +125,10 @@ protected:
     int sharedSectionReserveContact;
     int sharedSectionReleaseContact;
     std::vector<std::pair<int, int>> sharedSectionDirections;
+
     bool directionIsForward;
     bool isWritenForward;
+    bool goingTowardsSharedSection; // If false, it means the next destination is the station
 
     int entranceIndex;
     int exitIndex;

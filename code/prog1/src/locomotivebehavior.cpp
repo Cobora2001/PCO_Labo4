@@ -44,6 +44,7 @@ void LocomotiveBehavior::determineContactPoints() {
     int targetIndexEntry;
     int targetIndexExit;
 
+
     if(isWritenForward) {
         if(directionIsForward) {
             targetIndexEntry = entranceIndex - INCOMING_BUFFER;
@@ -63,10 +64,12 @@ void LocomotiveBehavior::determineContactPoints() {
         }
     }
 
+
     targetIndexEntry = (targetIndexEntry + contacts.size()) % contacts.size();
     targetIndexExit  = (targetIndexExit  + contacts.size()) % contacts.size();
 
 
     sharedSectionReserveContact = contacts[targetIndexEntry];
     sharedSectionReleaseContact = contacts[targetIndexExit];
+
 }

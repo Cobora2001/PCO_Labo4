@@ -78,13 +78,18 @@ int cmain()
      * Position de départ des locos *
      ********************************/
 
+    int beginStartTrain0 = 14;
+    int endStartTrain0 = 7;
+    int beginStartTrain1 = 10;
+    int endStartTrain1 = 4;
+
     // Loco 0
     // Exemple de position de départ
-    locoA.fixerPosition(14, 7);
+    locoA.fixerPosition(beginStartTrain0, endStartTrain0);
 
     // Loco 1
     // Exemple de position de départ
-    locoB.fixerPosition(10, 4);
+    locoB.fixerPosition(beginStartTrain1, endStartTrain1);
 
     /***********
      * Message *
@@ -100,10 +105,61 @@ int cmain()
     // Création de la section partagée
     std::shared_ptr<SharedSectionInterface> sharedSection = std::make_shared<SharedSection>();
 
+    std::vector<std::pair<int, int>> directionsTrain0 = {{14, DEVIE}, {21, DEVIE}};
+    std::vector<std::pair<int, int>> directionsTrain1 = {{14, TOUT_DROIT}, {21, TOUT_DROIT}};
+
+    std::vector<int> contactsTrain0 = {14, 7, 6, 5, 34, 33, 28, 22, 24, 16, 15};
+    std::vector<int> contactsTrain1 = {10, 4, 3, 2, 1, 31, 33, 28, 22, 24, 19, 13, 12, 11};
+
+    int entrance = 33;
+    int exit = 24;
+
+    int stationTrain0 = 6;
+    int stationTrain1 = 13;
+
+    auto start0Train0 = std::find(contactsTrain0.begin(), contactsTrain0.end(), beginStartTrain0);
+    int start0Train0Index = -1;
+    if(start != contacts.end()) {
+        entranceIndex = std::distance(contacts.begin(), start0Train0);
+    }
+
+    auto start0Train1 = std::find(contactsTrain1.begin(), contactsTrain1.end(), beginStartTrain1);
+    int start0Train1Index = -1;
+    if(start != contacts.end()) {
+        entranceIndex = std::distance(contacts.begin(), start0Train1);
+    }
+
+    auto start1Train0 = std::find(contactsTrain0.begin(), contactsTrain0.end(), endStartTrain0);
+    int start1Train0Index = -1;
+    if(start != contacts.end()) {
+        entranceIndex = std::distance(contacts.begin(), start1Train0);
+    }
+
+    auto start1Train1 = std::find(contactsTrain1.begin(), contactsTrain1.end(), endStartTrain1);
+    int start1Train1Index = -1;
+    if(start != contacts.end()) {
+        entranceIndex = std::distance(contacts.begin(), start1Train1);
+    }
+
+    if (start0Train0Index == -1 || start0Train1Index == -1 || start1Train0Index == -1 || start1Train1Index == -1 || start0Train0Index == start1Train0Index || start0Train1Index == start1Train1Index) {
+        throw std::runtime_error("Invalid contacts");
+    }
+
+    bool train0GoingForward = (start0Train0Index < start1Train0Index);
+    bool train1GoingForward = (start0Train1Index < start1Train1Index);
+
+    // TODO : vérifier qu'on ne commence pas dans la section partagée
+
+    /*Locomotive& loco, std::shared_ptr<SharedSectionInterface> sharedSection, 
+                        std::vector<std::pair<int, int>> sharedSectionDirections, 
+                        bool isWrittenForward, bool isGoingForward, 
+                        std::vector<int> contacts, int stationContact,
+                        int entrance, int exit, int station*/
+
     // Création du thread pour la loco 0
-    std::unique_ptr<Launchable> locoBehaveA = std::make_unique<LocomotiveBehavior>(locoA, sharedSection /*, autres paramètres ...*/);
+    std::unique_ptr<Launchable> locoBehaveA = std::make_unique<LocomotiveBehavior>(locoA, sharedSection, directionsTrain0, train0GoingForward
     // Création du thread pour la loco 1
-    std::unique_ptr<Launchable> locoBehaveB = std::make_unique<LocomotiveBehavior>(locoB, sharedSection /*, autres paramètres ...*/);
+    std::unique_ptr<Launchable> locoBehaveB = std::make_unique<LocomotiveBehavior>(locoB, sharedSection);
 
     // Lanchement des threads
     afficher_message(qPrintable(QString("Lancement thread loco A (numéro %1)").arg(locoA.numero())));

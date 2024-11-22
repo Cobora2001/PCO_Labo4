@@ -10,6 +10,7 @@ public:
 
     /* Implémentez toute la logique que vous avez besoin pour que les locomotives
      * s'attendent correctement à la station */
+    void trainArrived();
 
 private:
     /* TODO */
@@ -17,8 +18,6 @@ private:
     int trainsAtStation;
     std::mutex stationMutex;
     PcoSemaphore stationSemaphore{0};
-
-    void trainArrived();
 };
 
 #endif // SHARED_STATION_H

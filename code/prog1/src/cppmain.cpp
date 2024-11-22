@@ -20,14 +20,18 @@ static Locomotive locoA(0 /* Numéro (pour commande trains sur maquette réelle)
 // Locomotive B
 static Locomotive locoB(1 /* Numéro (pour commande trains sur maquette réelle) */, 12 /* Vitesse */);
 
+std::vector<Locomotive> trainsExisting = {locoA, locoB};
+
 //Arret d'urgence
 void emergency_stop()
 {
-    // TODO
+    for(auto& loco : trainsExisting) {
+        loco.arreter();
+        loco.fixerVitesse(0);
+    }
 
     afficher_message("\nSTOP!");
 }
-
 
 //Fonction principale
 int cmain()
@@ -117,49 +121,23 @@ int cmain()
     int stationTrain0 = 6;
     int stationTrain1 = 13;
 
-    auto start0Train0 = std::find(contactsTrain0.begin(), contactsTrain0.end(), beginStartTrain0);
-    int start0Train0Index = -1;
-    if(start != contacts.end()) {
-        entranceIndex = std::distance(contacts.begin(), start0Train0);
-    }
-
-    auto start0Train1 = std::find(contactsTrain1.begin(), contactsTrain1.end(), beginStartTrain1);
-    int start0Train1Index = -1;
-    if(start != contacts.end()) {
-        entranceIndex = std::distance(contacts.begin(), start0Train1);
-    }
-
-    auto start1Train0 = std::find(contactsTrain0.begin(), contactsTrain0.end(), endStartTrain0);
-    int start1Train0Index = -1;
-    if(start != contacts.end()) {
-        entranceIndex = std::distance(contacts.begin(), start1Train0);
-    }
-
-    auto start1Train1 = std::find(contactsTrain1.begin(), contactsTrain1.end(), endStartTrain1);
-    int start1Train1Index = -1;
-    if(start != contacts.end()) {
-        entranceIndex = std::distance(contacts.begin(), start1Train1);
-    }
-
-    if (start0Train0Index == -1 || start0Train1Index == -1 || start1Train0Index == -1 || start1Train1Index == -1 || start0Train0Index == start1Train0Index || start0Train1Index == start1Train1Index) {
-        throw std::runtime_error("Invalid contacts");
-    }
-
-    bool train0GoingForward = (start0Train0Index < start1Train0Index);
-    bool train1GoingForward = (start0Train1Index < start1Train1Index);
-
-    // TODO : vérifier qu'on ne commence pas dans la section partagée
+    bool isWrittenForwardTrain0 = true;
+    bool isWrittenForwardTrain1 = true;
 
     /*Locomotive& loco, std::shared_ptr<SharedSectionInterface> sharedSection, 
                         std::vector<std::pair<int, int>> sharedSectionDirections, 
-                        bool isWrittenForward, bool isGoingForward, 
-                        std::vector<int> contacts, int stationContact,
-                        int entrance, int exit, int station*/
+                        bool isWrittenForward, 
+                        std::vector<int> contacts,
+                        int entrance, int exit,
+                        int trainFirstStart, int trainSecondStart*/
 
     // Création du thread pour la loco 0
-    std::unique_ptr<Launchable> locoBehaveA = std::make_unique<LocomotiveBehavior>(locoA, sharedSection, directionsTrain0, train0GoingForward
+    std::unique_ptr<Launchable> locoBehaveA = std::make_unique<LocomotiveBehavior>(locoA, sharedSection, directionsTrain0, isWrittenForwardTrain0, contactsTrain0, entrance, exit, beginStartTrain0, endStartTrain0);
     // Création du thread pour la loco 1
-    std::unique_ptr<Launchable> locoBehaveB = std::make_unique<LocomotiveBehavior>(locoB, sharedSection);
+    std::unique_ptr<Launchable> locoBehaveB = std::make_unique<LocomotiveBehavior>(locoB, sharedSection, directionsTrain1, isWrittenForwardTrain1, contactsTrain1, entrance, exit, beginStartTrain1, endStartTrain1);
+
+    locoBehaveA->setStationContact(stationTrain0);
+    locoBehaveB->setStationContact(stationTrain1);
 
     // Lanchement des threads
     afficher_message(qPrintable(QString("Lancement thread loco A (numéro %1)").arg(locoA.numero())));

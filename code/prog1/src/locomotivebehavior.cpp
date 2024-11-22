@@ -73,3 +73,90 @@ void LocomotiveBehavior::determineContactPoints() {
     sharedSectionReleaseContact = contacts[targetIndexExit];
 
 }
+
+void LocomotiveBehavior::calculateEntranceAndExitIndexes() {
+    entranceIndex = getIndexOfContact(entrance);
+    exitIndex = getIndexOfContact(exit);
+
+    if(entranceIndex == -1 || exitIndex == -1 || entranceIndex == exitIndex) {
+        throw std::runtime_error("Invalid contacts");
+    }
+}
+
+void LocomotiveBehavior::setStationContact(int contact) {
+    int stationIndex = getIndexOfContact(contact);
+
+    if(stationIndex == -1) {
+        throw std::runtime_error("Invalid station contact");
+    }
+
+    bool sharedSectionIsCut = isSharedSectionCut();
+
+    bool stationError;
+
+    if (isWritenForward) {
+        stationError = sharedSectionIsCut 
+                ? (stationIndex > entranceIndex || stationIndex < exitIndex)
+                : (stationIndex < entranceIndex || stationIndex > exitIndex);
+    } else {
+        stationError = sharedSectionIsCut 
+                ? (stationIndex < entranceIndex || stationIndex > exitIndex)
+                : (stationIndex > entranceIndex || stationIndex < exitIndex);
+    }
+
+    if (stationError) {
+        throw std::runtime_error("Invalid station contact");
+    }
+
+    stationContact = contact;
+}
+
+bool LocomotiveBehavior::isSharedSectionCut() {
+    return (entranceIndex > exitIndex) && !isWritenForward || (entranceIndex < exitIndex) && isWritenForward;
+}
+
+bool LocomotiveBehavior::isGoingForward(int firstIndex, int secondIndex) {
+    return firstIndex < secondIndex;
+}
+
+void LocomotiveBehavior::isStartingPositionValid(int firstIndex, int secondIndex) {
+
+    if(firstIndex == -1 || secondIndex == -1 || firstIndex == secondIndex || firstIndex == entranceIndex || firstIndex == exitIndex || secondIndex == entranceIndex || secondIndex == exitIndex) {
+        throw std::runtime_error("Invalid starting position");
+    }
+
+    bool sharedSectionIsCut = isSharedSectionCut();
+
+    if(isWritenForward) {
+        if(sharedSectionIsCut) {
+            if(firstIndex > entranceIndex || firstIndex < exitIndex || secondIndex > entranceIndex || secondIndex < exitIndex) {
+                throw std::runtime_error("Invalid starting position");
+            }
+        } else {
+            if(firstIndex > entranceIndex && firstIndex < exitIndex || secondIndex > entranceIndex && secondIndex < exitIndex) {
+                throw std::runtime_error("Invalid starting position");
+            }
+        }
+    } else {
+        if(sharedSectionIsCut) {
+            if(firstIndex < entranceIndex || firstIndex > exitIndex || secondIndex < entranceIndex || secondIndex > exitIndex) {
+                throw std::runtime_error("Invalid starting position");
+            }
+        } else {
+            if(firstIndex < entranceIndex && firstIndex > exitIndex || secondIndex < entranceIndex && secondIndex > exitIndex) {
+                throw std::runtime_error("Invalid starting position");
+            }
+        }
+    }
+
+}
+
+int LocomotiveBehavior::getIndexOfContact(int contact) {
+    auto it = std::find(contacts.begin(), contacts.end(), contact);
+    int index = -1;
+    if(it != contacts.end()) {
+        index = std::distance(contacts.begin(), it);
+    }
+
+    return index;
+}

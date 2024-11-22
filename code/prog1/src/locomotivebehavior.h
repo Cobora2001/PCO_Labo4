@@ -29,14 +29,14 @@ public:
      */
     LocomotiveBehavior(Locomotive& loco, std::shared_ptr<SharedSectionInterface> sharedSection, 
                         std::vector<std::pair<int, int>> sharedSectionDirections, 
-                        bool isWrittenForward/*, bool isGoingForward*/, 
-                        std::vector<int> contacts, /*int stationContact*/,
-                        int entrance, int exit) : 
+                        bool isWrittenForward, 
+                        std::vector<int> contacts,
+                        int entrance, int exit,
+                        int trainFirstStart, int trainSecondStart) : 
         loco(loco), 
         sharedSection(sharedSection), 
         sharedSectionDirections(sharedSectionDirections), 
-        contacts(contacts), stationContact(stationContact), 
-        isWritenForward(isWrittenForward), directionIsForward(isGoingForward), 
+        contacts(contacts), isWritenForward(isWrittenForward),  
         entrance(entrance), exit(exit) {
 
         // Find the indeex of the shared section in the contacts
@@ -46,39 +46,16 @@ public:
             stationIndex = std::distance(contacts.begin(), it);
         }
 
-        auto it2 = std::find(contacts.begin(), contacts.end(), entrance);
-        entranceIndex = -1;
-        if(it2 != contacts.end()) {
-            entranceIndex = std::distance(contacts.begin(), it2);
-        }
+        calculateEntranceAndExitIndexes();
 
-        auto it3 = std::find(contacts.begin(), contacts.end(), exit);
-        exitIndex = -1;
-        if(it3 != contacts.end()) {
-            exitIndex = std::distance(contacts.begin(), it3);
-        }
+        int trainFirstIndex = -1;
+        int trainSecondIndex = -1;
 
-        if(stationIndex == -1 || entranceIndex == -1 || exitIndex == -1 || entranceIndex == exitIndex) {
-            throw std::runtime_error("Invalid contacts");
-        }
+        isStartingPositionValid(trainFirstStart, trainSecondStart);
 
-        bool sharedSectionIsCut = (entranceIndex > exitIndex) && !isWritenForward || (entranceIndex < exitIndex) && isWritenForward;
+        directionIsForward = isGoingForward(trainFirstStart, trainSecondStart);
 
-        bool stationError;
-
-        if (isWritenForward) {
-            stationError = sharedSectionIsCut 
-                   ? (stationIndex > entranceIndex || stationIndex < exitIndex)
-                   : (stationIndex < entranceIndex || stationIndex > exitIndex);
-        } else {
-            stationError = sharedSectionIsCut 
-                   ? (stationIndex < entranceIndex || stationIndex > exitIndex)
-                   : (stationIndex > entranceIndex || stationIndex < exitIndex);
-        }
-
-        if (stationError) {
-            throw std::runtime_error("Invalid station contact");
-        }
+        bool sharedSectionIsCut = isSharedSectionCut();
 
         int sizeOfSharedSection = sharedSectionIsCut ? contacts.size() - entranceIndex + exitIndex + 1 : exitIndex - entranceIndex + 1;
 
@@ -92,6 +69,8 @@ public:
         nbOfTurns = rand() % (maxNbOfTurns - minNbOfTurns + 1) + minNbOfTurns;
         
     }
+
+    bool isSharedSectionCut();
 
 protected:
     /*!
@@ -113,6 +92,19 @@ protected:
      * \brief determineContactPoints Détermine les points de contact de la locomotive avec la shared section selon la direction de la locomotive
     */
     void determineContactPoints();
+
+    void calculateEntranceAndExitIndexes();
+
+    void setStationContact(int contact);
+
+    int firstIndex = getIndexOfContact(trainFirstStart);
+    int secondIndex = getIndexOfContact(trainSecondStart);
+
+    void isStartingPositionValid(int firstIndex, int secondIndex);
+
+    bool isGoingForward(int firstIndex, int secondIndex);
+
+    int getIndexOfContact(int contact);
 
     /**
      * @brief loco La locomotive dont on représente le comportement

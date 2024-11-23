@@ -20,6 +20,8 @@ void LocomotiveBehavior::run()
     //sharedSection->access(loco);
     //sharedSection->leave(loco);
 
+    loco.afficherMessage(this->toString());
+
     while(true) {
         int vitesse = loco.vitesse();
 
@@ -68,14 +70,16 @@ void LocomotiveBehavior::run()
                 directionIsForward = !directionIsForward;
                 loco.afficherMessage("Inversion du sens.");
 
+                // Déterminer les nouveaux points de contact
+                determineContactPoints();
+
                 // Réinitialiser le nombre de tours
                 nbOfTurns = rand() % (maxNbOfTurns - minNbOfTurns + 1) + minNbOfTurns;
 
-                // Reconfigurer les contacts
-                setNextDestination(getIndexOfContact(stationContact));
-
                 loco.fixerVitesse(vitesse);
             }
+
+            goingTowardsSharedSection = true;
         }
     }
 }
@@ -328,4 +332,24 @@ void LocomotiveBehavior::setNextDestination(int secondStartIndex) {
         i = (i + 1) % contacts.size();
     }
 
+}
+
+QString LocomotiveBehavior::toString() {
+    QString str = "LocomotiveBehavior : \n" +
+            QString("Locomotive : %1\n").arg(loco.numero()) +
+            QString("Shared section reserve contact : %1\n").arg(sharedSectionReserveContact) +
+            QString("Shared section release contact : %1\n").arg(sharedSectionReleaseContact) +
+            QString("Shared section directions : \n") +
+            QString("Entrance index : %1\n").arg(entranceIndex) +
+            QString("Exit index : %1\n").arg(exitIndex) +
+            QString("Entrance : %1\n").arg(entrance) +
+            QString("Exit : %1\n").arg(exit) +
+            QString("Station contact : %1\n").arg(stationContact) +
+            QString("Direction is forward : %1\n").arg(directionIsForward) +
+            QString("Is written forward : %1\n").arg(isWritenForward) +
+            QString("Going towards shared section : %1\n").arg(goingTowardsSharedSection) +
+            QString("Number of turns : %1\n").arg(nbOfTurns) +
+            QString("Max number of turns : %1\n").arg(maxNbOfTurns) +
+            QString("Min number of turns : %1\n").arg(minNbOfTurns);
+    return str;
 }

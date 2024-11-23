@@ -89,11 +89,11 @@ int cmain()
 
     // Loco 0
     // Exemple de position de départ
-    locoA.fixerPosition(beginStartTrain0, endStartTrain0);
+    locoA.fixerPosition(endStartTrain0, beginStartTrain0);
 
     // Loco 1
     // Exemple de position de départ
-    locoB.fixerPosition(beginStartTrain1, endStartTrain1);
+    locoB.fixerPosition(endStartTrain1, beginStartTrain1);
 
     /***********
      * Message *
@@ -113,7 +113,7 @@ int cmain()
     std::vector<std::pair<int, int>> directionsTrain0 = {{14, DEVIE}, {21, DEVIE}};
     std::vector<std::pair<int, int>> directionsTrain1 = {{14, TOUT_DROIT}, {21, TOUT_DROIT}};
 
-    std::vector<int> contactsTrain0 = {14, 7, 6, 5, 34, 33, 28, 22, 24, 16, 15};
+    std::vector<int> contactsTrain0 = {14, 7, 6, 5, 34, 33, 28, 22, 24, 23, 16, 15};
     std::vector<int> contactsTrain1 = {10, 4, 3, 2, 1, 31, 33, 28, 22, 24, 19, 13, 12, 11};
 
     int entrance = 33;

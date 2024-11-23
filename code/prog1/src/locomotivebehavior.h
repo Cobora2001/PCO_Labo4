@@ -114,6 +114,8 @@ protected:
 
     void setStationContact(int contact);
 
+    QString toString();
+
     /**
      * @brief loco La locomotive dont on représente le comportement
      */

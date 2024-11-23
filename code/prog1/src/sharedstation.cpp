@@ -9,7 +9,7 @@
 
 #include "sharedstation.h"
 
-SharedStation::SharedStation(int nbTrains, int nbTours) : nbTrains(nbTrains), trainsAtStation(0) {
+SharedStation::SharedStation(int nbTrains) : nbTrains(nbTrains), trainsAtStation(0) {
 
 }
 

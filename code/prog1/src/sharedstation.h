@@ -6,7 +6,7 @@
 class SharedStation
 {
 public:
-    SharedStation(int nbTrains, int nbTours);
+    SharedStation(int nbTrains);
 
     /* Implémentez toute la logique que vous avez besoin pour que les locomotives
      * s'attendent correctement à la station */

@@ -108,6 +108,7 @@ int cmain()
 
     // Création de la section partagée
     std::shared_ptr<SharedSectionInterface> sharedSection = std::make_shared<SharedSection>();
+    std::shared_ptr<SharedStation> sharedStation = std::make_shared<SharedStation>(trainsExisting.size());
 
     std::vector<std::pair<int, int>> directionsTrain0 = {{14, DEVIE}, {21, DEVIE}};
     std::vector<std::pair<int, int>> directionsTrain1 = {{14, TOUT_DROIT}, {21, TOUT_DROIT}};
@@ -132,9 +133,9 @@ int cmain()
                         int trainFirstStart, int trainSecondStart*/
 
     // Création du thread pour la loco 0
-    std::unique_ptr<Launchable> locoBehaveA = std::make_unique<LocomotiveBehavior>(locoA, sharedSection, directionsTrain0, isWrittenForwardTrain0, contactsTrain0, entrance, exit, beginStartTrain0, endStartTrain0, stationTrain0);
+    std::unique_ptr<Launchable> locoBehaveA = std::make_unique<LocomotiveBehavior>(locoA, sharedSection, directionsTrain0, isWrittenForwardTrain0, contactsTrain0, entrance, exit, beginStartTrain0, endStartTrain0, stationTrain0, sharedStation);
     // Création du thread pour la loco 1
-    std::unique_ptr<Launchable> locoBehaveB = std::make_unique<LocomotiveBehavior>(locoB, sharedSection, directionsTrain1, isWrittenForwardTrain1, contactsTrain1, entrance, exit, beginStartTrain1, endStartTrain1, stationTrain1);
+    std::unique_ptr<Launchable> locoBehaveB = std::make_unique<LocomotiveBehavior>(locoB, sharedSection, directionsTrain1, isWrittenForwardTrain1, contactsTrain1, entrance, exit, beginStartTrain1, endStartTrain1, stationTrain1, sharedStation);
 
     // Lanchement des threads
     afficher_message(qPrintable(QString("Lancement thread loco A (numéro %1)").arg(locoA.numero())));

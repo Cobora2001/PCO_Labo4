@@ -21,28 +21,6 @@ void LocomotiveBehavior::run()
     //sharedSection->leave(loco);
 
     while(true) {
-        /*
-        // On attend qu'une locomotive arrive sur le contact 1.
-        // Pertinent de faire ça dans les deux threads? Pas sûr...
-        attendre_contact(1);
-        loco.afficherMessage("J'ai atteint le contact 1");*/
-
-        // Si on va vers la seciton partagée
-            // Attendre le point de réservation
-                // Il doit y avoir des mégouilles dans la zone pour que la loco s'arrête si et seulement si elle doit s'arrêter
-            // réservation
-            // Mettre les rails dans la bonne direction
-            // Attendre le point de libération
-            // libération
-        // Si on va vers la station
-            // Attendre le point de la station
-            // Retirer 1 au nombre de tours à faire
-            // Si le nombre de tours est à 0
-                // Arrêter la loco
-                // Lancer les trucs d'arrêts à la station
-                // Une fois libéré, changer de sens
-                // Retrouver un nouveau nombre de tours
-                // Changer les points de contact de la zone partagée
         int vitesse = loco.vitesse();
 
         if(goingTowardsSharedSection){
@@ -62,7 +40,7 @@ void LocomotiveBehavior::run()
             loco.fixerVitesse(vitesse);
 
             attendre_contact(sharedSectionReleaseContact);
-            locomotive.afficherMessage("Sortie de la section partagée.");
+            loco.afficherMessage("Sortie de la section partagée.");
         
             sharedSection->leave(loco);
 
@@ -82,7 +60,7 @@ void LocomotiveBehavior::run()
                 loco.fixerVitesse(0);
 
                 // Synchroniser avec l'autre locomotive à la gare
-                sharedStation.trainArrived();
+                sharedStation->trainArrived();
                 loco.afficherMessage("Arrêt en gare. Synchronisation...");
 
                 // Inverser le sens

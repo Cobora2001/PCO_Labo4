@@ -10,6 +10,7 @@
 #include "locomotive.h"
 #include "launchable.h"
 #include "sharedsectioninterface.h"
+#include "sharedstation.h"
 
 #include <vector>
 #include <utility>
@@ -33,12 +34,13 @@ public:
                         std::vector<int> contacts,
                         int entrance, int exit,
                         int trainFirstStart, int trainSecondStart,
-                        int stationContact) : 
+                        int stationContact,
+                        std::shared_ptr<SharedStation> sharedStation) : 
         loco(loco), 
         sharedSection(sharedSection), 
         sharedSectionDirections(sharedSectionDirections), 
         contacts(contacts), isWritenForward(isWrittenForward),  
-        entrance(entrance), exit(exit) {
+        entrance(entrance), exit(exit), sharedStation(sharedStation) {
 
         // Find the indeex of the shared section in the contacts
         auto it = std::find(contacts.begin(), contacts.end(), stationContact);
@@ -121,6 +123,7 @@ protected:
      * @brief sharedSection Pointeur sur la section partagée
      */
     std::shared_ptr<SharedSectionInterface> sharedSection;
+    std::shared_ptr<SharedStation> sharedStation;
 
     std::vector<int> contacts;
     int stationContact;

@@ -130,6 +130,27 @@ void LocomotiveBehavior::setStationContact(int contact) {
         throw std::runtime_error("Invalid station contact");
     }
 
+    // Station can't be in the buffer zone of the shared section (this time it needs to be in either direction, meaning we must take the max of the incoming and outgoing buffer)
+    if(isWritenForward) {
+        for(int i = 1; i <= std::max(INCOMING_BUFFER, OUTGOING_BUFFER); ++i) {
+            if(contacts[(stationIndex - i + contacts.size()) % contacts.size()] == exit) {
+                throw std::runtime_error("Invalid station contact");
+            }
+            if(contacts[(stationIndex + i) % contacts.size()] == entrance) {
+                throw std::runtime_error("Invalid station contact");
+            }
+        }
+    } else {
+        for(int i = 1; i <= std::max(INCOMING_BUFFER, OUTGOING_BUFFER); ++i) {
+            if(contacts[(stationIndex + i) % contacts.size()] == exit) {
+                throw std::runtime_error("Invalid station contact");
+            }
+            if(contacts[(stationIndex - i + contacts.size()) % contacts.size()] == entrance) {
+                throw std::runtime_error("Invalid station contact");
+            }
+        }
+    }
+
     stationContact = contact;
 }
 

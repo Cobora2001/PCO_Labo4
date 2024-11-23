@@ -147,6 +147,10 @@ void LocomotiveBehavior::isStartingPositionValid(int firstIndex, int secondIndex
         throw std::runtime_error("Invalid starting position");
     }
 
+    if(abs(firstIndex - secondIndex) != 1) {
+        throw std::runtime_error("Invalid starting position");
+    }
+
     bool sharedSectionIsCut = isSharedSectionCut();
 
     if(isWritenForward) {
@@ -167,6 +171,58 @@ void LocomotiveBehavior::isStartingPositionValid(int firstIndex, int secondIndex
         } else {
             if(firstIndex < entranceIndex && firstIndex > exitIndex || secondIndex < entranceIndex && secondIndex > exitIndex) {
                 throw std::runtime_error("Invalid starting position");
+            }
+        }
+    }
+
+    // We also can't be in the sector of the buffer zone
+    // Wel'll iterate through the contacts for the distance of the buffer from the starting point of the train to check that the train is not in the buffer zone
+    if(directionIsForward) {
+        if(isWritenForward) {
+            for(int i = 1; i < INCOMING_BUFFER; ++i) {
+                if(contacts[(secondIndex + i) % contacts.size()] == entrance) {
+                    throw std::runtime_error("Invalid starting position");
+                }
+            }
+            for(int i = 1; i < OUTGOING_BUFFER; ++i) {
+                if(contacts[(firstIndex - i + contacts.size()) % contacts.size()] == exit) {
+                    throw std::runtime_error("Invalid starting position");
+                }
+            }
+        } else {
+            for(int i = 1; i < INCOMING_BUFFER; ++i) {
+                if(contacts[(secondIndex + i) % contacts.size()] == exit) {
+                    throw std::runtime_error("Invalid starting position");
+                }
+            }
+            for(int i = 1; i < OUTGOING_BUFFER; ++i) {
+                if(contacts[(firstIndex - i + contacts.size()) % contacts.size()] == entrance) {
+                    throw std::runtime_error("Invalid starting position");
+                }
+            }
+        }
+    } else {
+        if(isWritenForward) {
+            for(int i = 1; i < INCOMING_BUFFER; ++i) {
+                if(contacts[(secondIndex - i + contacts.size()) % contacts.size()] == exit) {
+                    throw std::runtime_error("Invalid starting position");
+                }
+            }
+            for(int i = 1; i < OUTGOING_BUFFER; ++i) {
+                if(contacts[(firstIndex + i) % contacts.size()] == entrance) {
+                    throw std::runtime_error("Invalid starting position");
+                }
+            }
+        } else {
+            for(int i = 1; i < INCOMING_BUFFER; ++i) {
+                if(contacts[(secondIndex - i + contacts.size()) % contacts.size()] == entrance) {
+                    throw std::runtime_error("Invalid starting position");
+                }
+            }
+            for(int i = 1; i < OUTGOING_BUFFER; ++i) {
+                if(contacts[(firstIndex + i) % contacts.size()] == exit) {
+                    throw std::runtime_error("Invalid starting position");
+                }
             }
         }
     }

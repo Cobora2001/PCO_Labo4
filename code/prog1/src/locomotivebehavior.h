@@ -52,15 +52,17 @@ public:
         int trainFirstIndex = getIndexOfContact(trainFirstStart);
         int trainSecondIndex = getIndexOfContact(trainSecondStart);
 
-        isStartingPositionValid(trainFirstIndex, trainSecondIndex);
-
         directionIsForward = isGoingForward(trainFirstIndex, trainSecondIndex);
+
+        isStartingPositionValid(trainFirstIndex, trainSecondIndex);
 
         bool sharedSectionIsCut = isSharedSectionCut();
 
         int sizeOfSharedSection = sharedSectionIsCut ? contacts.size() - entranceIndex + exitIndex + 1 : exitIndex - entranceIndex + 1;
 
-        if (contacts.size() < sizeOfSharedSection + INCOMING_BUFFER + OUTGOING_BUFFER) {
+        // The shared section must be at least 2 * max(INCOMING_BUFFER, OUTGOING_BUFFER) + 1, because the station mustn't be in the shared section
+        // or the buffer zone of the shared section either on the way forward or backward
+        if (contacts.size() < sizeOfSharedSection + 2 * max(INCOMING_BUFFER, OUTGOING_BUFFER) + 1) {
             throw std::runtime_error("Invalid shared section");
         }
 

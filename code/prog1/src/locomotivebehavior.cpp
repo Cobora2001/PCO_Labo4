@@ -43,7 +43,62 @@ void LocomotiveBehavior::run()
                 // Une fois libéré, changer de sens
                 // Retrouver un nouveau nombre de tours
                 // Changer les points de contact de la zone partagée
+        int vitesse = loco.vitesse();
 
+        if(goingTowardsSharedSection){
+            attendre_contact(sharedSectionReserveContact);
+
+            // À améliorer pour ne pas arrêter la locomotive si elle acquiert le contact de la shared section
+
+            loco.fixerVitesse(0);
+
+            sharedSection->access(loco);
+            loco.afficherMessage("Entrée dans la section partagée.");
+
+            for(auto& direction : sharedSectionDirections) {
+                diriger_aiguillage(direction.first, direction.second, 0);
+            }
+
+            loco.fixerVitesse(vitesse);
+
+            attendre_contact(sharedSectionReleaseContact);
+            locomotive.afficherMessage("Sortie de la section partagée.");
+        
+            sharedSection->leave(loco);
+
+            goingTowardsSharedSection = false;
+        }  else {
+            // Gestion de la station
+
+            // Attendre le contact de la station
+            attendre_contact(stationContact);
+            loco.afficherMessage("Arrivée à la gare.");
+
+            // Réduire le nombre de tours restants
+            --nbOfTurns;
+
+            if (nbOfTurns == 0) {
+                // Arrêter la locomotive
+                loco.fixerVitesse(0);
+
+                // Synchroniser avec l'autre locomotive à la gare
+                sharedStation.trainArrived();
+                loco.afficherMessage("Arrêt en gare. Synchronisation...");
+
+                // Inverser le sens
+                loco.inverserSens();
+                directionIsForward = !directionIsForward;
+                loco.afficherMessage("Inversion du sens.");
+
+                // Réinitialiser le nombre de tours
+                nbOfTurns = rand() % (maxNbOfTurns - minNbOfTurns + 1) + minNbOfTurns;
+
+                // Reconfigurer les contacts
+                setNextDestination(getIndexOfContact(stationContact));
+
+                loco.fixerVitesse(vitesse);
+            }
+        }
     }
 }
 

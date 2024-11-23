@@ -120,7 +120,7 @@ int cmain()
     int exit = 24;
 
     int stationTrain0 = 6;
-    int stationTrain1 = 13;
+    int stationTrain1 = 12;
 
     bool isWrittenForwardTrain0 = true;
     bool isWrittenForwardTrain1 = true;

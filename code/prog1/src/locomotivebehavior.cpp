@@ -142,7 +142,7 @@ void LocomotiveBehavior::setStationContact(int contact) {
     int stationIndex = getIndexOfContact(contact);
 
     if(stationIndex == -1) {
-        throw std::runtime_error("Invalid station contact");
+        throw std::runtime_error("Invalid station contact 1");
     }
 
     bool sharedSectionIsCut = isSharedSectionCut();
@@ -152,34 +152,34 @@ void LocomotiveBehavior::setStationContact(int contact) {
     if (isWritenForward) {
         stationError = sharedSectionIsCut 
                 ? (stationIndex > entranceIndex || stationIndex < exitIndex)
-                : (stationIndex < entranceIndex || stationIndex > exitIndex);
+                : (stationIndex > entranceIndex && stationIndex < exitIndex);
     } else {
         stationError = sharedSectionIsCut 
                 ? (stationIndex < entranceIndex || stationIndex > exitIndex)
-                : (stationIndex > entranceIndex || stationIndex < exitIndex);
+                : (stationIndex < entranceIndex && stationIndex > exitIndex);
     }
 
     if (stationError) {
-        throw std::runtime_error("Invalid station contact");
+        throw std::runtime_error("Invalid station contact 2");
     }
 
     // Station can't be in the buffer zone of the shared section (this time it needs to be in either direction, meaning we must take the max of the incoming and outgoing buffer)
     if(isWritenForward) {
         for(int i = 1; i <= std::max(INCOMING_BUFFER, OUTGOING_BUFFER); ++i) {
             if(contacts[(stationIndex - i + contacts.size()) % contacts.size()] == exit) {
-                throw std::runtime_error("Invalid station contact");
+                throw std::runtime_error("Invalid station contact 3");
             }
             if(contacts[(stationIndex + i) % contacts.size()] == entrance) {
-                throw std::runtime_error("Invalid station contact");
+                throw std::runtime_error("Invalid station contact 4");
             }
         }
     } else {
         for(int i = 1; i <= std::max(INCOMING_BUFFER, OUTGOING_BUFFER); ++i) {
             if(contacts[(stationIndex + i) % contacts.size()] == exit) {
-                throw std::runtime_error("Invalid station contact");
+                throw std::runtime_error("Invalid station contact 5");
             }
             if(contacts[(stationIndex - i + contacts.size()) % contacts.size()] == entrance) {
-                throw std::runtime_error("Invalid station contact");
+                throw std::runtime_error("Invalid station contact 6");
             }
         }
     }
@@ -188,7 +188,7 @@ void LocomotiveBehavior::setStationContact(int contact) {
 }
 
 bool LocomotiveBehavior::isSharedSectionCut() {
-    return (entranceIndex > exitIndex) && !isWritenForward || (entranceIndex < exitIndex) && isWritenForward;
+    return (entranceIndex > exitIndex) && isWritenForward || (entranceIndex < exitIndex) && !isWritenForward;
 }
 
 bool LocomotiveBehavior::isGoingForward(int firstIndex, int secondIndex) {
@@ -196,13 +196,13 @@ bool LocomotiveBehavior::isGoingForward(int firstIndex, int secondIndex) {
 }
 
 void LocomotiveBehavior::isStartingPositionValid(int firstIndex, int secondIndex) {
-
+    
     if(firstIndex == -1 || secondIndex == -1 || firstIndex == secondIndex || firstIndex == entranceIndex || firstIndex == exitIndex || secondIndex == entranceIndex || secondIndex == exitIndex) {
-        throw std::runtime_error("Invalid starting position");
+        throw std::runtime_error("Invalid starting position 1");
     }
 
     if(abs(firstIndex - secondIndex) != 1) {
-        throw std::runtime_error("Invalid starting position");
+        throw std::runtime_error("Invalid starting position 2");
     }
 
     bool sharedSectionIsCut = isSharedSectionCut();
@@ -210,21 +210,21 @@ void LocomotiveBehavior::isStartingPositionValid(int firstIndex, int secondIndex
     if(isWritenForward) {
         if(sharedSectionIsCut) {
             if(firstIndex > entranceIndex || firstIndex < exitIndex || secondIndex > entranceIndex || secondIndex < exitIndex) {
-                throw std::runtime_error("Invalid starting position");
+                throw std::runtime_error("Invalid starting position 3");
             }
         } else {
             if(firstIndex > entranceIndex && firstIndex < exitIndex || secondIndex > entranceIndex && secondIndex < exitIndex) {
-                throw std::runtime_error("Invalid starting position");
+                throw std::runtime_error("Invalid starting position 4");
             }
         }
     } else {
         if(sharedSectionIsCut) {
             if(firstIndex < entranceIndex || firstIndex > exitIndex || secondIndex < entranceIndex || secondIndex > exitIndex) {
-                throw std::runtime_error("Invalid starting position");
+                throw std::runtime_error("Invalid starting position 5");
             }
         } else {
             if(firstIndex < entranceIndex && firstIndex > exitIndex || secondIndex < entranceIndex && secondIndex > exitIndex) {
-                throw std::runtime_error("Invalid starting position");
+                throw std::runtime_error("Invalid starting position 6");
             }
         }
     }
@@ -235,23 +235,23 @@ void LocomotiveBehavior::isStartingPositionValid(int firstIndex, int secondIndex
         if(isWritenForward) {
             for(int i = 1; i < INCOMING_BUFFER; ++i) {
                 if(contacts[(secondIndex + i) % contacts.size()] == entrance) {
-                    throw std::runtime_error("Invalid starting position");
+                    throw std::runtime_error("Invalid starting position 7");
                 }
             }
             for(int i = 1; i < OUTGOING_BUFFER; ++i) {
                 if(contacts[(firstIndex - i + contacts.size()) % contacts.size()] == exit) {
-                    throw std::runtime_error("Invalid starting position");
+                    throw std::runtime_error("Invalid starting position 8");
                 }
             }
         } else {
             for(int i = 1; i < INCOMING_BUFFER; ++i) {
                 if(contacts[(secondIndex + i) % contacts.size()] == exit) {
-                    throw std::runtime_error("Invalid starting position");
+                    throw std::runtime_error("Invalid starting position 9");
                 }
             }
             for(int i = 1; i < OUTGOING_BUFFER; ++i) {
                 if(contacts[(firstIndex - i + contacts.size()) % contacts.size()] == entrance) {
-                    throw std::runtime_error("Invalid starting position");
+                    throw std::runtime_error("Invalid starting position 10");
                 }
             }
         }
@@ -259,23 +259,23 @@ void LocomotiveBehavior::isStartingPositionValid(int firstIndex, int secondIndex
         if(isWritenForward) {
             for(int i = 1; i < INCOMING_BUFFER; ++i) {
                 if(contacts[(secondIndex - i + contacts.size()) % contacts.size()] == exit) {
-                    throw std::runtime_error("Invalid starting position");
+                    throw std::runtime_error("Invalid starting position 11");
                 }
             }
             for(int i = 1; i < OUTGOING_BUFFER; ++i) {
                 if(contacts[(firstIndex + i) % contacts.size()] == entrance) {
-                    throw std::runtime_error("Invalid starting position");
+                    throw std::runtime_error("Invalid starting position 12");
                 }
             }
         } else {
             for(int i = 1; i < INCOMING_BUFFER; ++i) {
                 if(contacts[(secondIndex - i + contacts.size()) % contacts.size()] == entrance) {
-                    throw std::runtime_error("Invalid starting position");
+                    throw std::runtime_error("Invalid starting position 13");
                 }
             }
             for(int i = 1; i < OUTGOING_BUFFER; ++i) {
                 if(contacts[(firstIndex + i) % contacts.size()] == exit) {
-                    throw std::runtime_error("Invalid starting position");
+                    throw std::runtime_error("Invalid starting position 14");
                 }
             }
         }

@@ -59,10 +59,10 @@ public:
         int trainFirstIndex = getIndexOfContact(trainFirstStart);
         int trainSecondIndex = getIndexOfContact(trainSecondStart);
 
-        // Détermine si la locomotive va en avant ou en arrière (vérifie quelques points de validité basiques)
+        // Détermine si la locomotive va en avant ou en arrière, en assumant que les positions de départ sont valides (on vérifie ça plus tard, et on a besoin de cette information pour la suite)
         directionIsForward = isGoingForward(trainFirstIndex, trainSecondIndex);
 
-        // Vérifie si la position de départ est valide (tous le reste des vérifications sont faites dans cette fonction)
+        // Vérifie si la position de départ est valide
         isStartingPositionValid(trainFirstIndex, trainSecondIndex);
 
         // Vérifie si la section partagée est coupée (dans la liste des contacts)

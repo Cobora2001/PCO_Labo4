@@ -16,39 +16,61 @@ void LocomotiveBehavior::run()
 
     /* A vous de jouer ! */
 
-    // Vous pouvez appeler les méthodes de la section partagée comme ceci :
-    //sharedSection->access(loco);
-    //sharedSection->leave(loco);
-
-    loco.afficherMessage(this->toString());
+    // Si jamais on a besoin d'avoir l'état initial de la locomotive pour du troubleshooting
+    // loco.afficherMessage(this->toString());
 
     while(true) {
+        // On mémorise la vitesse actuelle de la locomotive
         int vitesse = loco.vitesse();
 
-        if(goingTowardsSharedSection){
+        // On attend le contact suivant: soit avec la shared section, soit avec la station
+        if(goingTowardsSharedSection){ // Gestion de la shared section
+
+            // On attend le contact de la shared section (plus exactement, le point de réservation de la seciton partagée calculée via la définition du incoming buffer)
             attendre_contact(sharedSectionReserveContact);
 
             // À améliorer pour ne pas arrêter la locomotive si elle acquiert le contact de la shared section
+            // Edit: L'arrêt en question est imperceptible dans nos tests, donc on le laisse tel quel pour l'instant
 
+            // On arrête la locomotive
             loco.fixerVitesse(0);
 
+            // On réserve la section partagée
             sharedSection->access(loco);
-            loco.afficherMessage("Entrée dans la section partagée.");
+            loco.afficherMessage("Réservation de la section partagée.");
 
+            // On dirige les aiguillages pour que la locomotive puisse entrer dans la section partagée, et en sortir
             for(auto& direction : sharedSectionDirections) {
                 diriger_aiguillage(direction.first, direction.second, 0);
             }
 
+            // On redémarre la locomotive
             loco.fixerVitesse(vitesse);
 
-            attendre_contact(sharedSectionReleaseContact);
+            // On affiche un message pour indiquer que la locomotive est entrée dans la section partagée (donc qu'elle est sortie du buffer)
+            if(directionIsForward && isWritenForward || !directionIsForward && !isWritenForward) {
+                attendre_contact(entrance);
+            } else {
+                attendre_contact(exit);
+            }
+            loco.afficherMessage("Entrée dans la section partagée.");
+
+            // On attend le contact de sortie de la section partagée
+            if(directionIsForward && isWritenForward || !directionIsForward && !isWritenForward) {
+                attendre_contact(exit);
+            } else {
+                attendre_contact(entrance);
+            }
             loco.afficherMessage("Sortie de la section partagée.");
-        
+
+            // On libère la section partagée une fois qu'on est assez loin, au point de release de la section partagée, calculé via la définition de l'outgoing buffer
+            attendre_contact(sharedSectionReleaseContact);
+            loco.afficherMessage("Libération de la section partagée.");
             sharedSection->leave(loco);
 
+            // On définit qu'on se dirige vers la station
             goingTowardsSharedSection = false;
-        }  else {
-            // Gestion de la station
+        }  else { // Gestion de la station
 
             // Attendre le contact de la station
             attendre_contact(stationContact);
@@ -57,24 +79,26 @@ void LocomotiveBehavior::run()
             // Réduire le nombre de tours restants
             --nbOfTurns;
 
+            // Si on a fait le nombre de tours demandé (donc s'il ne reste aucun tour à faire)
             if (nbOfTurns == 0) {
                 // Arrêter la locomotive
                 loco.fixerVitesse(0);
 
-                // Synchroniser avec l'autre locomotive à la gare
-                sharedStation->trainArrived();
+                // Synchroniser avec l'autre locomotive à la gare.
+                // On attend que l'autre locomotive soit aussi à la gare, puis on attend deux secondes, puis on démarre les deux locomotives dans le sens opposé
                 loco.afficherMessage("Arrêt en gare. Synchronisation...");
+                sharedStation->trainArrived();
 
                 // Inverser le sens
                 loco.inverserSens();
                 directionIsForward = !directionIsForward;
                 loco.afficherMessage("Inversion du sens.");
 
-                // Déterminer les nouveaux points de contact
+                // Déterminer les nouveaux points de contact (point de réservation et de libération de la section partagée)
                 determineContactPoints();
 
-                // Réinitialiser le nombre de tours
-                nbOfTurns = rand() % (maxNbOfTurns - minNbOfTurns + 1) + minNbOfTurns;
+                // Réinitialiser le nombre de tours restants avec un nombre aléatoire entre minNbOfTurns et maxNbOfTurns
+                nbOfTurns = getRandomTurnNumber();
 
                 loco.fixerVitesse(vitesse);
             }
@@ -141,8 +165,6 @@ void LocomotiveBehavior::calculateEntranceAndExitIndexes() {
 
 void LocomotiveBehavior::setStationContact(int contact) {
 
-    // FIXME : La station peut actuellement être dans la zone où on aura déjà réservé la zone partagée, pouvant donc mener à un interblocage
-
     int stationIndex = getIndexOfContact(contact);
 
     if(stationIndex == -1) {
@@ -167,7 +189,7 @@ void LocomotiveBehavior::setStationContact(int contact) {
         throw std::runtime_error("Invalid station contact 2");
     }
 
-    // Station can't be in the buffer zone of the shared section (this time it needs to be in either direction, meaning we must take the max of the incoming and outgoing buffer)
+    // La station ne doit pas être dans la zone tampon de la section partagée, dans le sens aller ou retour
     if(isWritenForward) {
         for(int i = 1; i <= std::max(INCOMING_BUFFER, OUTGOING_BUFFER); ++i) {
             if(contacts[(stationIndex - i + contacts.size()) % contacts.size()] == exit) {
@@ -352,4 +374,33 @@ QString LocomotiveBehavior::toString() {
             QString("Max number of turns : %1\n").arg(maxNbOfTurns) +
             QString("Min number of turns : %1\n").arg(minNbOfTurns);
     return str;
+}
+
+int LocomotiveBehavior::getRandomTurnNumber() {
+    return rand() % (maxNbOfTurns - minNbOfTurns + 1) + minNbOfTurns;
+}
+
+void LocomotiveBehavior::checkMinimalSizeOfContacts(int sizeOfSharedSection) {
+    // La section partagée doit être d'au moins 2 * max(INCOMING_BUFFER, OUTGOING_BUFFER) + 1, car la station ne doit pas être dans la section partagée
+    // ou la zone tampon de la section partagée non plus sur le chemin aller ou retour
+    if (contacts.size() < sizeOfSharedSection + 2 * std::max(INCOMING_BUFFER, OUTGOING_BUFFER) + 1) {
+        throw std::runtime_error("Invalid shared section");
+    }
+}
+
+int LocomotiveBehavior::sizeSharedSection(bool sharedSectionIsCut) {
+
+    if(sharedSectionIsCut) {
+        if(directionIsForward) {
+            return contacts.size() - entranceIndex + exitIndex + 1;
+        } else {
+            return contacts.size() - exitIndex + entranceIndex + 1;
+        }
+    } else {
+        if(directionIsForward) {
+            return exitIndex - entranceIndex + 1;
+        } else {
+            return entranceIndex - exitIndex + 1;
+        }
+    }
 }

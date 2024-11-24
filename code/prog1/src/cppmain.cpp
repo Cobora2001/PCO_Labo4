@@ -16,9 +16,9 @@
 // Laissez les numéros des locos à 0 et 1 pour ce laboratoire
 
 // Locomotive A
-static Locomotive locoA(0 /* Numéro (pour commande trains sur maquette réelle) */, 10 /* Vitesse */);
+static Locomotive locoA(0 /* Numéro (pour commande trains sur maquette réelle) */, 20 /* Vitesse */);
 // Locomotive B
-static Locomotive locoB(1 /* Numéro (pour commande trains sur maquette réelle) */, 12 /* Vitesse */);
+static Locomotive locoB(1 /* Numéro (pour commande trains sur maquette réelle) */, 24 /* Vitesse */);
 
 std::vector<Locomotive> trainsExisting = {locoA, locoB};
 

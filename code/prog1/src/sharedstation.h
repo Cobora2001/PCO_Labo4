@@ -2,22 +2,27 @@
 #define SHARED_STATION_H
 
 #include <pcosynchro/pcosemaphore.h>
+#include <pcosynchro/pcomutex.h>
 
 class SharedStation
 {
 public:
+    /**
+     * @brief SharedStation Constructeur de la classe SharedStation
+     * @param nbTrains Le nombre de trains qui doivent arriver à la station
+     */
     SharedStation(int nbTrains);
 
-    /* Implémentez toute la logique que vous avez besoin pour que les locomotives
-     * s'attendent correctement à la station */
+    /**
+     * @brief trainArrived Méthode à appeler lorsqu'un train arrive à la station
+     */
     void trainArrived();
 
 private:
-    /* TODO */
     int nbTrains;
     int trainsAtStation;
-    std::mutex stationMutex;
-    PcoSemaphore stationSemaphore{0};
+    PcoMutex stationMutex;
+    PcoSemaphore stationSemaphore;
 };
 
 #endif // SHARED_STATION_H

@@ -36,8 +36,20 @@ public:
      * de la locomotive si la section est occupée par une autre locomotive
      */
     void access(Locomotive &loco) override {
+        bool canGo = obtainRightToGoWithoutStop();
+
+        int vitesse = loco.vitesse();
+
+        if (!canGo) {
+            loco.fixerVitesse(0);
+        }
+
         semaphore.acquire();
         afficher_message(qPrintable(QString("The engine no. %1 accesses the shared section.").arg(loco.numero())));
+
+        if(!canGo) {
+            loco.fixerVitesse(vitesse);
+        }
     }
 
     /**
@@ -46,6 +58,8 @@ public:
      * @param loco La locomotive qui quitte la section partagée
      */
     void leave(Locomotive& loco) override {
+        setCanGoWithoutStop();
+
         semaphore.release();
         afficher_message(qPrintable(QString("The engine no. %1 leaves the shared section.").arg(loco.numero())));
     }
@@ -53,9 +67,40 @@ public:
 private:
 
     /**
+     * @brief obtainRightToGoWithoutStop Méthode à appeler pour obtenir le droit de passer sans s'arrêter
+     * @return true si la locomotive peut passer sans s'arrêter, false sinon
+     */
+    bool obtainRightToGoWithoutStop() {
+        mutex.lock();
+        bool canGo = canGoWithoutStop;
+        canGoWithoutStop = false;
+        mutex.unlock();
+        return canGo;
+    }
+
+    /**
+     * @brief setCanGoWithoutStop Méthode à appeler pour donner le droit de passer sans s'arrêter après être passé
+     */
+    void setCanGoWithoutStop() {
+        mutex.lock();
+        canGoWithoutStop = true;
+        mutex.unlock();
+    }
+
+    /**
      * @brief semaphore Sémaphore pour gérer l'accès à la section partagée
      */
     PcoSemaphore semaphore{1};
+
+    /**
+     * @brief mutex Mutex pour protéger l'accès à canGoWithoutStop
+     */
+    PcoMutex mutex;
+
+    /**
+     * @brief canGoWithoutStop Indique si la locomotive peut passer sans s'arrêter
+     */
+    bool canGoWithoutStop;
 };
 
 

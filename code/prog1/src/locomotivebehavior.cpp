@@ -20,20 +20,11 @@ void LocomotiveBehavior::run()
     // loco.afficherMessage(this->toString());
 
     while(true) {
-        // On mémorise la vitesse actuelle de la locomotive
-        int vitesse = loco.vitesse();
-
         // On attend le contact suivant: soit avec la shared section, soit avec la station
         if(goingTowardsSharedSection){ // Gestion de la shared section
 
             // On attend le contact de la shared section (plus exactement, le point de réservation de la seciton partagée calculée via la définition du incoming buffer)
             attendre_contact(sharedSectionReserveContact);
-
-            // À améliorer pour ne pas arrêter la locomotive si elle acquiert le contact de la shared section
-            // Edit: L'arrêt en question est imperceptible dans nos tests, donc on le laisse tel quel pour l'instant
-
-            // On arrête la locomotive
-            loco.fixerVitesse(0);
 
             // On réserve la section partagée
             sharedSection->access(loco);
@@ -43,9 +34,6 @@ void LocomotiveBehavior::run()
             for(auto& direction : sharedSectionDirections) {
                 diriger_aiguillage(direction.first, direction.second, 0);
             }
-
-            // On redémarre la locomotive
-            loco.fixerVitesse(vitesse);
 
             // On affiche un message pour indiquer que la locomotive est entrée dans la section partagée (donc qu'elle est sortie du buffer)
             if(directionIsForward && isWritenForward || !directionIsForward && !isWritenForward) {
@@ -63,9 +51,11 @@ void LocomotiveBehavior::run()
             }
             loco.afficherMessage("Sortie de la section partagée.");
 
-            // On libère la section partagée une fois qu'on est assez loin, au point de release de la section partagée, calculé via la définition de l'outgoing buffer
+            // On attend le contact de libération de la section partagée
             attendre_contact(sharedSectionReleaseContact);
             loco.afficherMessage("Libération de la section partagée.");
+
+            // On libère la section partagée
             sharedSection->leave(loco);
 
             // On définit qu'on se dirige vers la station
@@ -81,6 +71,9 @@ void LocomotiveBehavior::run()
 
             // Si on a fait le nombre de tours demandé (donc s'il ne reste aucun tour à faire)
             if (nbOfTurns == 0) {
+                // On mémorise la vitesse actuelle de la locomotive
+                int vitesse = loco.vitesse();
+
                 // Arrêter la locomotive
                 loco.fixerVitesse(0);
 

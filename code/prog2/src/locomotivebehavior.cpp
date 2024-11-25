@@ -397,6 +397,7 @@ QString LocomotiveBehavior::toString() {
             QString("Locomotive : %1\n").arg(loco.numero()) +
             QString("Shared section reserve contact : %1\n").arg(sharedSectionReserveContact) +
             QString("Shared section release contact : %1\n").arg(sharedSectionReleaseContact) +
+            QString("Shared section access contact : %1\n").arg(sharedSectionAccessContact) +
             QString("Shared section directions : \n") +
             QString("Entrance index : %1\n").arg(entranceIndex) +
             QString("Exit index : %1\n").arg(exitIndex) +
@@ -408,7 +409,8 @@ QString LocomotiveBehavior::toString() {
             QString("Going towards shared section : %1\n").arg(goingTowardsSharedSection) +
             QString("Number of turns : %1\n").arg(nbOfTurns) +
             QString("Max number of turns : %1\n").arg(maxNbOfTurns) +
-            QString("Min number of turns : %1\n").arg(minNbOfTurns);
+            QString("Min number of turns : %1\n").arg(minNbOfTurns) +
+            QString("Priority : %1\n").arg(loco.priority);
     return str;
 }
 

@@ -102,8 +102,8 @@ int cmain()
 
     // Test 1 : la section critique est écrite en allant de gauche à droite dans la liste des contacts, et elle est en un seul morceau
 
-    // std::vector<int> contactsTrain0 = {14, 7, 6, 5, 34, 33, 28, 22, 24, 23, 16, 15};
-    // std::vector<int> contactsTrain1 = {10, 4, 3, 2, 1, 31, 33, 28, 22, 24, 19, 13, 12, 11};
+    std::vector<int> contactsTrain0 = {14, 7, 6, 5, 34, 33, 28, 22, 24, 23, 16, 15};
+    std::vector<int> contactsTrain1 = {10, 4, 3, 2, 1, 31, 33, 28, 22, 24, 19, 13, 12, 11};
 
     // Test 2 : la section critique est écrite en allant de droite à gauche dans la liste des contacts, et elle est en un seul morceau
 
@@ -117,8 +117,8 @@ int cmain()
 
     // Test 4 : la section critique est écrite en allant de droite à gauche dans la liste des contacts, et elle est en deux morceaux
 
-    std::vector<int> contactsTrain0 = {28, 33, 34, 5, 6, 7, 14, 15, 16, 23, 24, 22};
-    std::vector<int> contactsTrain1 = {28, 33, 31, 1, 2, 3, 4, 10, 11, 12, 13, 19, 24, 22};
+    // std::vector<int> contactsTrain0 = {28, 33, 34, 5, 6, 7, 14, 15, 16, 23, 24, 22};
+    // std::vector<int> contactsTrain1 = {28, 33, 31, 1, 2, 3, 4, 10, 11, 12, 13, 19, 24, 22};
 
     /***************************************************************************************************
      * Directions des aiguillages pour la section partagée (à changer selon votre maquette et trajets) *
@@ -143,6 +143,20 @@ int cmain()
     int contactInFrontTrain0Start = 7;
     int contactBehindTrain1Start  = 10;
     int contactInFrontTrain1Start = 4;
+
+    // Si on veut aller dans l'autre sens, on change ici:
+
+    // int contactBehindTrain0Start  = 7;
+    // int contactInFrontTrain0Start = 14;
+    // int contactBehindTrain1Start  = 4;
+    // int contactInFrontTrain1Start = 10;
+
+    // Si on veut que les trains n'aillent pas dans le même sens, on change ici:
+
+    // int contactBehindTrain0Start  = 14;
+    // int contactInFrontTrain0Start = 7;
+    // int contactBehindTrain1Start  = 4;
+    // int contactInFrontTrain1Start = 10;
 
     // On remarque qu'on doit mettre celui qui est devant en premier dans les paramètres de la fonction fixerPosition, et celui qui est derrière en deuxième
     // À noter que nous avons choisi l'autre sens pour les paramètres dans le constructeur de LocomotiveBehavior, donc à faire attention
@@ -182,13 +196,13 @@ int cmain()
 
     // Test 1 et Test 3 : la section critique est écrite en allant de gauche à droite dans la liste des contacts
 
-    // bool isWrittenForwardTrain0 = true;
-    // bool isWrittenForwardTrain1 = true;
+    bool isWrittenForwardTrain0 = true;
+    bool isWrittenForwardTrain1 = true;
 
     // Test 2 et Test 4 : la section critique est écrite en allant de droite à gauche dans la liste des contacts
 
-    bool isWrittenForwardTrain0 = false;
-    bool isWrittenForwardTrain1 = false;
+    // bool isWrittenForwardTrain0 = false;
+    // bool isWrittenForwardTrain1 = false;
 
     // Création des threads pour les locos
     // Cela ne change pas entre nos tests ici

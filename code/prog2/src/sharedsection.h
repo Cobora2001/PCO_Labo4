@@ -29,7 +29,8 @@ public:
      * @brief SharedSection Constructeur de la classe qui représente la section partagée.
      * Initialisez vos éventuels attributs ici, sémaphores etc.
      */
-    SharedSection() : mode(PriorityMode::HIGH_PRIORITY), occupied(false), semaphore(1), mutex(), nbRequests(0), waitingSemaphore(0) {}
+    SharedSection() : mode(PriorityMode::HIGH_PRIORITY), occupied(false), semaphore(1), mutex(), 
+    nbRequests(0), waitingSemaphore(0) {}
 
     /**
      * @brief request Méthode a appeler pour indiquer que la locomotive désire accéder à la
@@ -88,7 +89,8 @@ public:
             // Vu qu'on va modifier la file d'attente, on doit verrouiller le mutex
             mutex.lock();
 
-            // Vérifie si la file d'attente est vide. Elle ne devrait pas l'être, vu qu'au moins la locomotive actuelle devrait être dedans
+            // Vérifie si la file d'attente est vide. Elle ne devrait pas l'être, 
+            // vu qu'au moins la locomotive actuelle devrait être dedans
             if(requestQueue.empty()) {
                 mutex.unlock();
                 throw std::runtime_error("No request in the queue");
@@ -153,7 +155,8 @@ public:
         mode = (mode == PriorityMode::HIGH_PRIORITY) ? PriorityMode::LOW_PRIORITY : PriorityMode::HIGH_PRIORITY;
         // Trie la file d'attente (normalement, on ne devrait pas avoir de locomotives en attente)
         sortRequestQueue();
-        afficher_message(qPrintable(QString("Priority mode changed to %1").arg(mode == PriorityMode::HIGH_PRIORITY ? "HIGH" : "LOW")));
+        afficher_message(qPrintable(QString("Priority mode changed to %1")
+                        .arg(mode == PriorityMode::HIGH_PRIORITY ? "HIGH" : "LOW")));
         mutex.unlock();
     }
 
@@ -168,7 +171,8 @@ private:
                                  return a.first > b.first; // Tri par priorité décroissante
                              });
         } else {
-            // Même chose que ci-dessus, mais en ordre décroissant, donc on pourra retirer l'élément le moins prioritaire de la file en retirant l'élément à la fin
+            // Même chose que ci-dessus, mais en ordre décroissant, 
+            //donc on pourra retirer l'élément le moins prioritaire de la file en retirant l'élément à la fin
             std::stable_sort(requestQueue.begin(), requestQueue.end(),
                              [](const std::pair<int, int>& a, const std::pair<int, int>& b) {
                                  return a.first < b.first; // Tri par priorité croissante

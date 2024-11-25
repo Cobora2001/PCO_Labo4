@@ -7,7 +7,8 @@
 #include "sharedsection.h"
 
 /**
- * @brief La classe SharedStation représente un moyen de coordiner l'arrivée de plusieurs trains à leur station respective
+ * @brief La classe SharedStation représente un moyen de coordiner 
+ * l'arrivée de plusieurs trains à leur station respective
  */
 class SharedStation
 {
@@ -45,7 +46,8 @@ private:
     PcoSemaphore stationSemaphore;
 
     /**
-     * @brief sharedSection La section partagée pour laquelle on doit changer la priorité quand tous les trains sont à la station (la même que celle des locomotives)
+     * @brief sharedSection La section partagée pour laquelle on doit changer la priorité 
+     * quand tous les trains sont à la station (la même que celle des locomotives)
      */
     std::shared_ptr<SharedSectionInterface> sharedSection;
 

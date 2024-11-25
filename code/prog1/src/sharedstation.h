@@ -5,7 +5,8 @@
 #include <pcosynchro/pcomutex.h>
 
 /**
- * @brief La classe SharedStation représente un moyen de coordiner l'arrivée de plusieurs trains à leur station respective
+ * @brief La classe SharedStation représente un moyen de coordiner 
+ * l'arrivée de plusieurs trains à leur station respective
  */
 class SharedStation
 {

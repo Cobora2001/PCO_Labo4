@@ -10,7 +10,8 @@
 #include "sharedstation.h"
 
 SharedStation::SharedStation(int nbTrains, std::shared_ptr<SharedSectionInterface> sharedSection)
-            : nbTrains(nbTrains), trainsAtStation(0), stationSemaphore(0), stationMutex(), sharedSection(sharedSection) {
+                : nbTrains(nbTrains), trainsAtStation(0), stationSemaphore(0), 
+                  stationMutex(), sharedSection(sharedSection) {
 
 }
 

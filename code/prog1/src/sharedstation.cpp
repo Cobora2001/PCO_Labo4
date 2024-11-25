@@ -9,8 +9,8 @@
 
 #include "sharedstation.h"
 
-SharedStation::SharedStation(int nbTrains) : nbTrains(nbTrains), trainsAtStation(0), stationSemaphore(0), stationMutex() {
-
+SharedStation::SharedStation(int nbTrains) : nbTrains(nbTrains), trainsAtStation(0), 
+stationSemaphore(0), stationMutex() {
 }
 
 void SharedStation::trainArrived() {

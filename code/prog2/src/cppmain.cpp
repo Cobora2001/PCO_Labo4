@@ -16,9 +16,18 @@
 // Laissez les numéros des locos à 0 et 1 pour ce laboratoire
 
 // Locomotive A
-static Locomotive locoA(0 /* Numéro (pour commande trains sur maquette réelle) */, 15 /* Vitesse */);
+
+// static Locomotive locoA(0 /* Numéro (pour commande trains sur maquette réelle) */, 15 /* Vitesse */);
+// Versions alternatives pour différents tests
+// static Locomotive locoA(0 /* Numéro (pour commande trains sur maquette réelle) */, 4 /* Vitesse */);
+static Locomotive locoA(0 /* Numéro (pour commande trains sur maquette réelle) */, 20 /* Vitesse */);
+
 // Locomotive B
+
 static Locomotive locoB(1 /* Numéro (pour commande trains sur maquette réelle) */, 18 /* Vitesse */);
+// Versions alternatives pour différents tests
+// static Locomotive locoB(1 /* Numéro (pour commande trains sur maquette réelle) */, 3 /* Vitesse */);
+// static Locomotive locoB(1 /* Numéro (pour commande trains sur maquette réelle) */, 10 /* Vitesse */);
 
 std::vector<Locomotive> trainsExisting = {locoA, locoB};
 
@@ -88,6 +97,8 @@ int cmain()
 
     // On définit 4 tests différents pour les trajets, et on les commente/décommente selon le test qu'on veut faire
     // On fait ça afin de pouvoir vérifier les 4 scénarios possibles pour la section partagée dans les contacts
+    // Normalement, on devrait avoir exactement les mêmes résultats pour les 4 tests
+    // On vérifie qu'on peut s'adapter à toutes les rédactions possibles de la section critique et du trajet
 
     // Test 1 : la section critique est écrite en allant de gauche à droite dans la liste des contacts, et elle est en un seul morceau
 

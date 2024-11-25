@@ -37,32 +37,43 @@ public:
      * @param loco La locomotive qui essaie accéder à la section partagée
      */
     void access(Locomotive &loco) override {
+
+        // On mémorise la vitesse actuelle de la locomotive au cas où elle devrait s'arrêter
         int vitesse = loco.vitesse();
 
+        // On mémorise si la locomotive a dû s'arrêter ou non
         bool couldGoWithoutStop = true;
 
+        // Flag pour savoir si la locomotive peut accéder à la section partagée et sortir de la boucle
         bool canGo = false;
 
         while(!canGo) {
             mutex.lock();
+            // Si la section partagée est occupée, on met la locomotive en attente
             if(occupied) {
                 ++nbWaiting;
                 mutex.unlock();
+                // Si la locomotive n'a pas déjà été arrêtée, on l'arrête
                 if(couldGoWithoutStop) {
                     loco.fixerVitesse(0);
+                    couldGoWithoutStop = false;
                 }
-                couldGoWithoutStop = false;
+                // On attend que qu'on réveille la locomotive
                 waitingSemaphore.acquire();
             } else {
+                // On occupe la section partagée
                 occupied = true;
                 mutex.unlock();
+                // On mémorise qu'on peut sortir de la boucle
                 canGo = true;
+                // On accède à la section partagée
                 semaphore.acquire();
             }
 
         }
         afficher_message(qPrintable(QString("The engine no. %1 accesses the shared section.").arg(loco.numero())));
 
+        // On redémarre la locomotive si elle a été arrêtée
         if(!couldGoWithoutStop) {
             loco.fixerVitesse(vitesse);
         }

@@ -102,9 +102,9 @@ public:
                 // Si on n'a pas déjà arrêté la locomotive, on le fait
                 if(!hadToStop) {
                     loco.fixerVitesse(0);
+                    // On mémorise qu'on a dû arrêter la locomotive
+                    hadToStop = true;
                 }
-                // On mémorise qu'on a dû arrêter la locomotive
-                hadToStop = true;
                 // On attend que la section partagée soit libérée et qu'on nous réveille
                 waitingSemaphore.acquire();
             } else {

@@ -196,7 +196,7 @@ private:
     PcoSemaphore waitingSemaphore;
 
     /**
-     * @brief mutex Mutex pour protéger l'accès à canGoWithoutStop
+     * @brief mutex Mutex pour protéger l'accès à occupied et requestQueue
      */
     PcoMutex mutex;
 

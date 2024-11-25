@@ -21,16 +21,16 @@
  * @brief La classe SharedSection implémente l'interface SharedSectionInterface qui
  * propose les méthodes liées à la section partagée.
  */
-class SharedSection final : public SharedSectionInterface
-{
+class SharedSection final : public SharedSectionInterface {
 public:
 
     /**
      * @brief SharedSection Constructeur de la classe qui représente la section partagée.
      * Initialisez vos éventuels attributs ici, sémaphores etc.
      */
-    SharedSection() : mode(PriorityMode::HIGH_PRIORITY), occupied(false), semaphore(1), mutex(), 
-    nbRequests(0), waitingSemaphore(0) {}
+    SharedSection() : mode(PriorityMode::HIGH_PRIORITY),
+                    occupied(false), semaphore(1), mutex(), 
+                    nbRequests(0), waitingSemaphore(0) {}
 
     /**
      * @brief request Méthode a appeler pour indiquer que la locomotive désire accéder à la
@@ -98,30 +98,46 @@ public:
 
             // Vérifie si la section partagée est occupée
             if(occupied) {
+                // On ne gère plus que des variables locales, on peut donc déverrouiller le mutex
                 mutex.unlock();
+                // Si on n'a pas déjà arrêté la locomotive, on le fait
                 if(!hadToStop) {
                     loco.fixerVitesse(0);
                 }
+                // On mémorise qu'on a dû arrêter la locomotive
                 hadToStop = true;
+                // On attend que la section partagée soit libérée et qu'on nous réveille
                 waitingSemaphore.acquire();
             } else {
                 // Vérifie si la locomotive actuelle est la prochaine à accéder à la section partagée
                 if (requestQueue.front().second == loco.numero()) {
+                    // On mémorise qu'on va pouvoir accéder à la section partagée
                     occupied = true;
+                    // On retire notre demande de la file
                     requestQueue.erase(requestQueue.begin());
+                    // On décrémente le nombre de demandes, vu qu'on a retiré la nôtre
+                    // (On n'a pas besoin de cette variable, on peut gérer ça avec la taille de la file...)
                     --nbRequests;
+                    // On ne gère plus que des variables locales, on peut donc déverrouiller le mutex
                     mutex.unlock();
+                    // On mémorise qu'on peut sortir de la boucle
                     canContinue = true;
+                    // Si on a dû arrêter la locomotive, on la redémarre
                     if(hadToStop) {
                         loco.fixerVitesse(vitesse);
                     }
+                    // On accède à la section partagée
                     semaphore.acquire();
                 } else {
+                    // On ne gère plus que des variables locales, on peut donc déverrouiller le mutex
                     mutex.unlock();
+                    // Si on n'a pas déjà arrêté la locomotive, on le fait
                     if(!hadToStop) {
                         loco.fixerVitesse(0);
                     }
+                    // On mémorise qu'on a dû arrêter la locomotive
                     hadToStop = true;
+                    // On attend que la section partagée soit libérée et qu'on nous réveille
                     waitingSemaphore.acquire();
                 }
             }
@@ -133,18 +149,22 @@ public:
      * @brief leave Méthode à appeler pour indiquer que la locomotive est sortie de la section
      * partagée. (reveille les threads des locomotives potentiellement en attente).
      * @param loco La locomotive qui quitte la section partagée
-     * @param locoId L'identidiant de la locomotive qui fait l'appel
      */
     void leave(Locomotive& loco) override {
+        // On se réserve le droit de modifier les variables partagées
         mutex.lock();
+        // On a quitte la section partagée
         occupied = false;
 
+        // On réveille les locomotives en attente
         for(int i = 0; i < nbRequests; ++i) {
             waitingSemaphore.release();
         }
 
+        // On libère le mutex
         mutex.unlock();
 
+        // On libère la section partagée
         semaphore.release();
         afficher_message(qPrintable(QString("The engine no. %1 leaves the shared section.").arg(loco.numero())));
     }

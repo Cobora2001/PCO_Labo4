@@ -48,6 +48,11 @@ public:
                         int stationContact,
                         std::shared_ptr<SharedStation> sharedStation);
 
+    /*!
+     * \brief initializeStaticMembers Initialise les membres statiques de la classe
+     */
+    static void initializeStaticMembers();
+
 protected:
     /*!
      * \brief run Fonction lancée par le thread, représente le comportement de la locomotive
@@ -233,6 +238,21 @@ protected:
      * @brief minNbOfTurns Nombre minimal de tours à effectuer
      */
     static const int minNbOfTurns = 1;
+
+        /**
+     * @brief rd Générateur de nombres aléatoires
+     */
+    static std::random_device rd;
+
+    /**
+     * @brief gen Générateur de nombres aléatoires
+     */
+    static std::mt19937 gen;
+
+    /**
+     * @brief turnDistribution Distribution de tours
+     */
+    static std::uniform_int_distribution<int> turnDistribution;
 };
 
 #endif // LOCOMOTIVEBEHAVIOR_H

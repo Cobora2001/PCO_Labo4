@@ -59,7 +59,7 @@ LocomotiveBehavior::LocomotiveBehavior(Locomotive& loco, std::shared_ptr<SharedS
     nbOfTurns = getRandomTurnNumber();
 
     // Affiche l'état initial de la locomotive pour les tests
-    // loco.afficherMessage(toString());
+    loco.afficherMessage(toString());
 }
 
 
@@ -579,7 +579,7 @@ QString LocomotiveBehavior::toString() {
 }
 
 int LocomotiveBehavior::getRandomTurnNumber() {
-    return rand() % (maxNbOfTurns - minNbOfTurns + 1) + minNbOfTurns;
+    return turnDistribution(gen);
 }
 
 void LocomotiveBehavior::checkMinimalSizeOfContacts(int sizeOfSharedSection) {
@@ -611,4 +611,16 @@ int LocomotiveBehavior::sizeSharedSection(bool sharedSectionIsCut) {
             return entranceIndex - exitIndex + 1;
         }
     }
+}
+
+std::random_device LocomotiveBehavior::rd;
+std::mt19937 LocomotiveBehavior::gen;
+std::uniform_int_distribution<int> LocomotiveBehavior::turnDistribution;
+
+void LocomotiveBehavior::initializeStaticMembers() {
+    // Initialise les générateurs de nombres aléatoires
+    gen.seed(rd());
+
+    // On fixe les bornes pour le nombre de tours
+    turnDistribution = std::uniform_int_distribution<int>(minNbOfTurns, maxNbOfTurns);
 }

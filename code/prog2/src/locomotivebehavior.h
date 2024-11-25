@@ -14,6 +14,7 @@
 
 #include <vector>
 #include <utility>
+#include <random>
 
 // Taille des buffers
 #define INCOMING_BUFFER 2
@@ -51,6 +52,11 @@ public:
                         int trainFirstStart, int trainSecondStart,
                         int stationContact,
                         std::shared_ptr<SharedStation> sharedStation);
+
+    /*!
+     * \brief initializeStaticMembers Initialise les membres statiques de la classe
+     */
+    static void initializeStaticMembers();
 
 protected:
     /*!
@@ -257,6 +263,26 @@ protected:
      * @brief maxPriority Priorité maximale
      */
     static const int maxPriority = 10;
+
+    /**
+     * @brief rd Générateur de nombres aléatoires
+     */
+    static std::random_device rd;
+
+    /**
+     * @brief gen Générateur de nombres aléatoires
+     */
+    static std::mt19937 gen;
+
+    /**
+     * @brief turnDistribution Distribution de tours
+     */
+    static std::uniform_int_distribution<int> turnDistribution;
+
+    /**
+     * @brief priorityDistribution Distribution de priorités
+     */
+    static std::uniform_int_distribution<int> priorityDistribution;
 };
 
 #endif // LOCOMOTIVEBEHAVIOR_H

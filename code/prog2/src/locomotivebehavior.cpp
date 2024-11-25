@@ -65,7 +65,7 @@ LocomotiveBehavior::LocomotiveBehavior(Locomotive& loco, std::shared_ptr<SharedS
     // loco.priority = loco.numero();
 
     // Afficher la locomotive via la méthode toString pour nos tests
-    // loco.afficherMessage(toString());
+    loco.afficherMessage(toString());
 }
 
 void LocomotiveBehavior::run()
@@ -611,7 +611,7 @@ QString LocomotiveBehavior::toString() {
 }
 
 int LocomotiveBehavior::getRandomTurnNumber() {
-    return rand() % (maxNbOfTurns - minNbOfTurns + 1) + minNbOfTurns;
+    return turnDistribution(gen);
 }
 
 void LocomotiveBehavior::checkMinimalSizeOfContacts(int sizeOfSharedSection) {
@@ -647,5 +647,19 @@ int LocomotiveBehavior::sizeSharedSection(bool sharedSectionIsCut) {
 
 void LocomotiveBehavior::setRandomPriority() {
     // On fixe une priorité aléatoire à la locomotive
-    loco.priority = rand() % maxPriority + minPriority;
+    loco.priority = priorityDistribution(gen);
+}
+
+std::random_device LocomotiveBehavior::rd;
+std::mt19937 LocomotiveBehavior::gen;
+std::uniform_int_distribution<int> LocomotiveBehavior::priorityDistribution;
+std::uniform_int_distribution<int> LocomotiveBehavior::turnDistribution;
+
+void LocomotiveBehavior::initializeStaticMembers() {
+    // Initialise les générateurs de nombres aléatoires
+    gen.seed(rd());
+
+    // On fixe les bornes pour la priorité et le nombre de tours
+    priorityDistribution = std::uniform_int_distribution<int>(minPriority, maxPriority);
+    turnDistribution = std::uniform_int_distribution<int>(minNbOfTurns, maxNbOfTurns);
 }

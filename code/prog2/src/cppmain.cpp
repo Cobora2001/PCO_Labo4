@@ -286,6 +286,9 @@ int cmain()
     bool isWrittenForwardTrain0 = false;
     bool isWrittenForwardTrain1 = false;
 
+    // Initialisation des membres statiques de locomotivebehavior pour le random
+    LocomotiveBehavior::initializeStaticMembers();
+
     // Création des threads pour les locos
     // Cela ne change pas entre nos tests ici
 

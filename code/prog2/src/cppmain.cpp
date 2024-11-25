@@ -16,9 +16,9 @@
 // Laissez les numéros des locos à 0 et 1 pour ce laboratoire
 
 // Locomotive A
-static Locomotive locoA(0 /* Numéro (pour commande trains sur maquette réelle) */, 20 /* Vitesse */);
+static Locomotive locoA(0 /* Numéro (pour commande trains sur maquette réelle) */, 15 /* Vitesse */);
 // Locomotive B
-static Locomotive locoB(1 /* Numéro (pour commande trains sur maquette réelle) */, 24 /* Vitesse */);
+static Locomotive locoB(1 /* Numéro (pour commande trains sur maquette réelle) */, 18 /* Vitesse */);
 
 std::vector<Locomotive> trainsExisting = {locoA, locoB};
 
@@ -78,22 +78,71 @@ int cmain()
     diriger_aiguillage(24, TOUT_DROIT, 0);
     // diriger_aiguillage(/*NUMERO*/, /*TOUT_DROIT | DEVIE*/, /*0*/);
 
+    /**********************************
+     * Initialisation des trajets     *
+     **********************************/
+
+    // Section critique: 33, 28, 22, 24
+    // On définit que 33 est l'entrée de la section critique, et 24 la sortie. Cela ne va jamais changer, peu importe le trajet ou la direction
+    // C'est juste que des fois la locomotive rentrera par 33 et sortira par 24, et des fois l'inverse, mais cela ne change pas entrée et sortie
+
+    // On définit 4 tests différents pour les trajets, et on les commente/décommente selon le test qu'on veut faire
+    // On fait ça afin de pouvoir vérifier les 4 scénarios possibles pour la section partagée dans les contacts
+
+    // Test 1 : la section critique est écrite en allant de gauche à droite dans la liste des contacts, et elle est en un seul morceau
+
+    // std::vector<int> contactsTrain0 = {14, 7, 6, 5, 34, 33, 28, 22, 24, 23, 16, 15};
+    // std::vector<int> contactsTrain1 = {10, 4, 3, 2, 1, 31, 33, 28, 22, 24, 19, 13, 12, 11};
+
+    // Test 2 : la section critique est écrite en allant de droite à gauche dans la liste des contacts, et elle est en un seul morceau
+
+    std::vector<int> contactsTrain0 = {15, 16, 23, 24, 22, 28, 33, 34, 5, 6, 7, 14};
+    std::vector<int> contactsTrain1 = {11, 12, 13, 19, 24, 22, 28, 33, 31, 1, 2, 3, 4, 10};
+
+    // Test 3 : la section critique est écrite en allant de gauche à droite dans la liste des contacts, et elle est en deux morceaux
+
+    // std::vector<int> contactsTrain0 = {22, 24, 23, 16, 15, 14, 7, 6, 5, 34, 33, 28};
+    // std::vector<int> contactsTrain1 = {22, 24, 19, 13, 12, 11, 10, 4, 3, 2, 1, 31, 33, 28};
+
+    // Test 4 : la section critique est écrite en allant de droite à gauche dans la liste des contacts, et elle est en deux morceaux
+
+    // std::vector<int> contactsTrain0 = {28, 33, 34, 5, 6, 7, 14, 15, 16, 23, 24, 22};
+    // std::vector<int> contactsTrain1 = {28, 33, 31, 1, 2, 3, 4, 10, 11, 12, 13, 19, 24, 22};
+
+    /***************************************************************************************************
+     * Directions des aiguillages pour la section partagée (à changer selon votre maquette et trajets) *
+     **************************************************************************************************/
+
+    // Ceci ne change pas entre nos tests ici
+
+    std::vector<std::pair<int, int>> directionsTrain0 = {{14, DEVIE}, {21, DEVIE}};
+    std::vector<std::pair<int, int>> directionsTrain1 = {{14, TOUT_DROIT}, {21, TOUT_DROIT}};
+
     /********************************
      * Position de départ des locos *
      ********************************/
 
-    int beginStartTrain0 = 14;
-    int endStartTrain0 = 7;
-    int beginStartTrain1 = 10;
-    int endStartTrain1 = 4;
+    // Les positions doivent faire partie des contacts du trajet de la locomotive, et être à une distance de 1 entre elles
+    // Elles ne doivent pas non plus être l'entrée ou la sortie de la section partagée, ni dans le buffer d'entrée ou de sortie
+    // Ne vous en faites pas, en cas d'erreur ici, la simulation s'arrêtera et vous affichera un message d'erreur via un throw
+
+    // On ne change pas ces valeurs entre nos tests ici, mais on peut faire des tests avec des valeurs différentes
+
+    int contactBehindTrain0Start  = 14;
+    int contactInFrontTrain0Start = 7;
+    int contactBehindTrain1Start  = 10;
+    int contactInFrontTrain1Start = 4;
+
+    // On remarque qu'on doit mettre celui qui est devant en premier dans les paramètres de la fonction fixerPosition, et celui qui est derrière en deuxième
+    // À noter que nous avons choisi l'autre sens pour les paramètres dans le constructeur de LocomotiveBehavior, donc à faire attention
 
     // Loco 0
     // Exemple de position de départ
-    locoA.fixerPosition(endStartTrain0, beginStartTrain0);
+    locoA.fixerPosition(contactInFrontTrain0Start, contactBehindTrain0Start);
 
     // Loco 1
     // Exemple de position de départ
-    locoB.fixerPosition(endStartTrain1, beginStartTrain1);
+    locoB.fixerPosition(contactInFrontTrain1Start, contactBehindTrain1Start);
 
     /***********
      * Message *
@@ -108,34 +157,35 @@ int cmain()
 
     // Création de la section partagée
     std::shared_ptr<SharedSectionInterface> sharedSection = std::make_shared<SharedSection>();
+
+    // Création de la station partagée
     std::shared_ptr<SharedStation> sharedStation = std::make_shared<SharedStation>(trainsExisting.size(), sharedSection);
 
-    std::vector<std::pair<int, int>> directionsTrain0 = {{14, DEVIE}, {21, DEVIE}};
-    std::vector<std::pair<int, int>> directionsTrain1 = {{14, TOUT_DROIT}, {21, TOUT_DROIT}};
-
-    std::vector<int> contactsTrain0 = {14, 7, 6, 5, 34, 33, 28, 22, 24, 23, 16, 15};
-    std::vector<int> contactsTrain1 = {10, 4, 3, 2, 1, 31, 33, 28, 22, 24, 19, 13, 12, 11};
-
+    // On définit les contacts d'entrée et de sortie de la section partagée. Cela ne change pas entre nos tests ici
     int entrance = 33;
     int exit = 24;
 
+    // On définit le contact de la station. Cela ne change pas entre nos tests ici
     int stationTrain0 = 6;
     int stationTrain1 = 12;
 
-    bool isWrittenForwardTrain0 = true;
-    bool isWrittenForwardTrain1 = true;
+    // Test 1 et Test 3 : la section critique est écrite en allant de gauche à droite dans la liste des contacts
 
-    /*Locomotive& loco, std::shared_ptr<SharedSectionInterface> sharedSection, 
-                        std::vector<std::pair<int, int>> sharedSectionDirections, 
-                        bool isWrittenForward, 
-                        std::vector<int> contacts,
-                        int entrance, int exit,
-                        int trainFirstStart, int trainSecondStart*/
+    // bool isWrittenForwardTrain0 = true;
+    // bool isWrittenForwardTrain1 = true;
+
+    // Test 2 et Test 4 : la section critique est écrite en allant de droite à gauche dans la liste des contacts
+
+    bool isWrittenForwardTrain0 = false;
+    bool isWrittenForwardTrain1 = false;
+
+    // Création des threads pour les locos
+    // Cela ne change pas entre nos tests ici
 
     // Création du thread pour la loco 0
-    std::unique_ptr<Launchable> locoBehaveA = std::make_unique<LocomotiveBehavior>(locoA, sharedSection, directionsTrain0, isWrittenForwardTrain0, contactsTrain0, entrance, exit, beginStartTrain0, endStartTrain0, stationTrain0, sharedStation);
+    std::unique_ptr<Launchable> locoBehaveA = std::make_unique<LocomotiveBehavior>(locoA, sharedSection, directionsTrain0, isWrittenForwardTrain0, contactsTrain0, entrance, exit, contactBehindTrain0Start, contactInFrontTrain0Start, stationTrain0, sharedStation);
     // Création du thread pour la loco 1
-    std::unique_ptr<Launchable> locoBehaveB = std::make_unique<LocomotiveBehavior>(locoB, sharedSection, directionsTrain1, isWrittenForwardTrain1, contactsTrain1, entrance, exit, beginStartTrain1, endStartTrain1, stationTrain1, sharedStation);
+    std::unique_ptr<Launchable> locoBehaveB = std::make_unique<LocomotiveBehavior>(locoB, sharedSection, directionsTrain1, isWrittenForwardTrain1, contactsTrain1, entrance, exit, contactBehindTrain1Start, contactInFrontTrain1Start, stationTrain1, sharedStation);
 
     // Lanchement des threads
     afficher_message(qPrintable(QString("Lancement thread loco A (numéro %1)").arg(locoA.numero())));

@@ -374,7 +374,7 @@ void LocomotiveBehavior::setNextDestination(int secondStartIndex) {
         }
 
         // On avance dans la liste des contacts
-        i = (directionIsForward ? i + 1 : i - 1 + contacts.size()s) % contacts.size();
+        i = (directionIsForward ? i + 1 : i - 1 + contacts.size()) % contacts.size();
     }
 
 }

@@ -91,8 +91,14 @@ public:
         // Sélectionne un nombre aléatoire de tours à effectuer
         nbOfTurns = getRandomTurnNumber();
 
+        // Sélectionne une priorité aléatoire
+        setRandomPriority();
+
+        // Manipulation de test pour gérer la priorité manuellement
+        // loco.priority = loco.numero();
+
         // Afficher la locomotive via la méthode toString pour nos tests
-        loco.afficherMessage(toString());
+        // loco.afficherMessage(toString());
     }
 
 protected:

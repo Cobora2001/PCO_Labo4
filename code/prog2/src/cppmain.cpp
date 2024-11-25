@@ -17,10 +17,10 @@
 
 // Locomotive A
 
-// static Locomotive locoA(0 /* Numéro (pour commande trains sur maquette réelle) */, 15 /* Vitesse */);
+static Locomotive locoA(0 /* Numéro (pour commande trains sur maquette réelle) */, 15 /* Vitesse */);
 // Versions alternatives pour différents tests
 // static Locomotive locoA(0 /* Numéro (pour commande trains sur maquette réelle) */, 4 /* Vitesse */);
-static Locomotive locoA(0 /* Numéro (pour commande trains sur maquette réelle) */, 20 /* Vitesse */);
+// static Locomotive locoA(0 /* Numéro (pour commande trains sur maquette réelle) */, 20 /* Vitesse */);
 
 // Locomotive B
 

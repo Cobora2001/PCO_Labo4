@@ -17,10 +17,10 @@
 
 // Locomotive A
 
-// static Locomotive locoA(0 /* Numéro (pour commande trains sur maquette réelle) */, 15 /* Vitesse */);
+static Locomotive locoA(0 /* Numéro (pour commande trains sur maquette réelle) */, 15 /* Vitesse */);
 // Versions alternatives pour différents tests
 // static Locomotive locoA(0 /* Numéro (pour commande trains sur maquette réelle) */, 4 /* Vitesse */);
-static Locomotive locoA(0 /* Numéro (pour commande trains sur maquette réelle) */, 20 /* Vitesse */);
+// static Locomotive locoA(0 /* Numéro (pour commande trains sur maquette réelle) */, 20 /* Vitesse */);
 
 // Locomotive B
 
@@ -102,8 +102,8 @@ int cmain()
 
     // Test 1 : la section critique est écrite en allant de gauche à droite dans la liste des contacts, et elle est en un seul morceau
 
-    // std::vector<int> contactsTrain0 = {14, 7, 6, 5, 34, 33, 28, 22, 24, 23, 16, 15};
-    // std::vector<int> contactsTrain1 = {10, 4, 3, 2, 1, 31, 33, 28, 22, 24, 19, 13, 12, 11};
+    std::vector<int> contactsTrain0 = {14, 7, 6, 5, 34, 33, 28, 22, 24, 23, 16, 15};
+    std::vector<int> contactsTrain1 = {10, 4, 3, 2, 1, 31, 33, 28, 22, 24, 19, 13, 12, 11};
 
     // Test 2 : la section critique est écrite en allant de droite à gauche dans la liste des contacts, et elle est en un seul morceau
 
@@ -112,8 +112,8 @@ int cmain()
 
     // Test 3 : la section critique est écrite en allant de gauche à droite dans la liste des contacts, et elle est en deux morceaux
 
-    std::vector<int> contactsTrain0 = {22, 24, 23, 16, 15, 14, 7, 6, 5, 34, 33, 28};
-    std::vector<int> contactsTrain1 = {22, 24, 19, 13, 12, 11, 10, 4, 3, 2, 1, 31, 33, 28};
+    // std::vector<int> contactsTrain0 = {22, 24, 23, 16, 15, 14, 7, 6, 5, 34, 33, 28};
+    // std::vector<int> contactsTrain1 = {22, 24, 19, 13, 12, 11, 10, 4, 3, 2, 1, 31, 33, 28};
 
     // Test 4 : la section critique est écrite en allant de droite à gauche dans la liste des contacts, et elle est en deux morceaux
 

@@ -446,5 +446,5 @@ int LocomotiveBehavior::sizeSharedSection(bool sharedSectionIsCut) {
 
 void LocomotiveBehavior::setRandomPriority() {
     // On fixe une priorité aléatoire à la locomotive
-    loco.priority = rand() % 100;
+    loco.priority = rand() % maxPriority + minPriority;
 }

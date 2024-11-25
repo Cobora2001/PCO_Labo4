@@ -88,7 +88,7 @@ public:
         nbOfTurns = getRandomTurnNumber();
 
         // Affiche l'état initial de la locomotive pour les tests
-        loco.afficherMessage(toString());
+        // loco.afficherMessage(toString());
     }
 
 protected:

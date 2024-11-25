@@ -15,8 +15,12 @@
 #include <vector>
 #include <utility>
 
+// Taille des buffers
 #define INCOMING_BUFFER 2
+#define ACCESS_BUFFER 1
 #define OUTGOING_BUFFER 1
+
+// Le incoming buffer doit être plus grand que l'accès buffer, et tous les buffers doivent être plus grands que 0
 
 /**
  * @brief La classe LocomotiveBehavior représente le comportement d'une locomotive
@@ -85,7 +89,9 @@ public:
         setNextDestination(trainSecondIndex);
 
         // Sélectionne un nombre aléatoire de tours à effectuer
-        nbOfTurns = getRandomTurnNumber();   
+        nbOfTurns = getRandomTurnNumber();
+
+
     }
 
 protected:
@@ -174,6 +180,11 @@ protected:
     int sizeSharedSection(bool sharedSectionIsCut);
 
     /*!
+     * \brief setRandomPriority Fixe une priorité aléatoire à la locomotive
+     */
+    void setRandomPriority();
+
+    /*!
      * \brief locoToString Retourne une représentation de la locomotive
      * \return la représentation de la locomotive
      */
@@ -208,6 +219,11 @@ protected:
      * @brief sharedSectionReserveContact Le contact de réservation de la section partagée
      */
     int sharedSectionReserveContact;
+
+    /**
+     * @brief sharedSectionAccessContact Le contact d'accès à la section partagée
+     */
+    int sharedSectionAccessContact;
 
     /**
      * @brief sharedSectionReleaseContact Le contact de libération de la section partagée
@@ -268,6 +284,16 @@ protected:
      * @brief minNbOfTurns Nombre minimal de tours à effectuer
      */
     static const int minNbOfTurns = 1;
+
+    /**
+     * @brief minPriority Priorité minimale
+     */
+    static const int minPriority = 0;
+
+    /**
+     * @brief maxPriority Priorité maximale
+     */
+    static const int maxPriority = 10;
 };
 
 #endif // LOCOMOTIVEBEHAVIOR_H

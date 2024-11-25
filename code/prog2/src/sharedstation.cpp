@@ -9,7 +9,8 @@
 
 #include "sharedstation.h"
 
-SharedStation::SharedStation(int nbTrains) : nbTrains(nbTrains), trainsAtStation(0), stationSemaphore(0), stationMutex() {
+SharedStation::SharedStation(int nbTrains, std::shared_ptr<SharedSectionInterface> sharedSection)
+            : nbTrains(nbTrains), trainsAtStation(0), stationSemaphore(0), stationMutex(), sharedSection(sharedSection) {
 
 }
 
@@ -18,6 +19,9 @@ void SharedStation::trainArrived() {
     stationMutex.lock();
     ++trainsAtStation;
     if(trainsAtStation == nbTrains) { // Si tous les trains sont arrivés
+        // On inverse le mode de priorité
+        sharedSection->togglePriorityMode();
+
         // Attendre que les passagers montent/descendent
         std::this_thread::sleep_for(std::chrono::seconds(2));
         // Les trains sont à la gare, débloquer l'attente

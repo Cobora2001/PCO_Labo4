@@ -11,6 +11,7 @@
 #include <QDebug>
 
 #include <pcosynchro/pcosemaphore.h>
+#include <pcosynchro/pcomutex.h>
 
 #include "locomotive.h"
 #include "ctrain_handler.h"
@@ -28,30 +29,33 @@ public:
      * @brief SharedSection Constructeur de la classe qui représente la section partagée.
      * Initialisez vos éventuels attributs ici, sémaphores etc.
      */
-    SharedSection() :  mode(PriorityMode::HIGH_PRIORITY), occupied(false) {}
+    SharedSection() : mode(PriorityMode::HIGH_PRIORITY), occupied(false), semaphore(1), mutex(), nbRequests(0), waitingSemaphore(0) {}
 
     /**
      * @brief request Méthode a appeler pour indiquer que la locomotive désire accéder à la
      * section partagée (deux contacts avant la section partagée).
-     * @param loco La locomotive qui désire accéder
-     * @param locoId L'identidiant de la locomotive qui fait l'appel
-     * @param entryPoint Le point d'entree de la locomotive qui fait l'appel
+     * @param loco
+     * @param locoId id de la locomotive qui demande l'accès
+     * @param priority priorité de la locomotive qui demande l'accès
+     * @param loco La locomotive qui demande l'accès
      */
-   void request(Locomotive& loco) override {
+   void request(Locomotive& loco, int locoId, int priority) override {
+        // On va modifier la file d'attente, on doit donc verrouiller le mutex
         mutex.lock();
 
-        // Vérifie si la locomotive a déjà fait une demande
+        // Vérifie si la locomotive a déjà fait une demande (elle ne devrait pas, mais on ne sait jamais)
         auto it = std::find_if(requestQueue.begin(), requestQueue.end(),
-                               [&loco](const std::pair<int, int>& req) { return req.second == loco.numero(); });
+                           [locoId](const std::pair<int, int>& req) { return req.second == locoId; });
 
-        if (it == requestQueue.end()) {
+        if (it == requestQueue.end()) { // Si la locomotive n'a pas encore fait de demande, c'est donc le cas normal
             // Ajoute la demande dans la file
-            requestQueue.push_back({priority, loco.numero()});
+            requestQueue.push_back({priority, locoId});
+            ++nbRequests;
             loco.afficherMessage(QString("Locomotive %1 a demandé la section avec priorité %2.")
-                                     .arg(loco.numero())
+                                     .arg(locoId)
                                      .arg(priority));
-        } else {
-            loco.afficherMessage(QString("Locomotive %1 a déjà une demande active.").arg(loco.numero()));
+        } else { // On ne devrait pas arriver ici
+            loco.afficherMessage(QString("Locomotive %1 a déjà une demande active.").arg(locoId));
         }
 
         // Trie la file en fonction du mode de priorité
@@ -67,29 +71,59 @@ public:
      * attente, le thread doit être reveillé lorsque la section partagée est à nouveau libre et
      * la locomotive redémarée. (méthode à appeler un contact avant la section partagée).
      * @param loco La locomotive qui essaie accéder à la section partagée
-     * @param locoId L'identidiant de la locomotive qui fait l'appel
      */
-    void access(Locomotive &loco, int priority) override {
-        // TODO
-          while (true) {
+    void access(Locomotive &loco) override {
+        
+        // Détermine si la locomotive peut accéder à la section partagée (elle va tenter tant qu'elle ne peut pas)
+        bool canContinue = false;
+
+        // On mémorise la vitesse actuelle de la locomotive au cas où elle devrait s'arrêter
+        int vitesse = loco.vitesse();
+
+        // On mémorise si la locomotive a dû s'arrêter
+        bool hadToStop = false;
+
+        // Tant que la locomotive ne peut pas accéder à la section partagée
+        while (!canContinue) {
+            // Vu qu'on va modifier la file d'attente, on doit verrouiller le mutex
             mutex.lock();
 
-            // Vérifie si la locomotive est en tête de file
-            if (!requestQueue.empty() && requestQueue.front().second == loco.numero() && !occupied) {
-                occupied = true;
-                requestQueue.erase(requestQueue.begin());
+            // Vérifie si la file d'attente est vide. Elle ne devrait pas l'être, vu qu'au moins la locomotive actuelle devrait être dedans
+            if(requestQueue.empty()) {
                 mutex.unlock();
-                break; // La locomotive peut entrer
+                throw std::runtime_error("No request in the queue");
             }
 
-            mutex.unlock();
-
-            // Si la locomotive ne peut pas entrer, elle attend
-            loco.arreter();
-            semaphore.acquire(); // Attend que la section soit libre
-            loco.demarrer();
+            // Vérifie si la section partagée est occupée
+            if(occupied) {
+                mutex.unlock();
+                if(!hadToStop) {
+                    loco.fixerVitesse(0);
+                }
+                hadToStop = true;
+                waitingSemaphore.acquire();
+            } else {
+                // Vérifie si la locomotive actuelle est la prochaine à accéder à la section partagée
+                if (requestQueue.front().second == loco.numero()) {
+                    occupied = true;
+                    requestQueue.erase(requestQueue.begin());
+                    --nbRequests;
+                    mutex.unlock();
+                    canContinue = true;
+                    if(hadToStop) {
+                        loco.fixerVitesse(vitesse);
+                    }
+                    semaphore.acquire();
+                } else {
+                    mutex.unlock();
+                    if(!hadToStop) {
+                        loco.fixerVitesse(0);
+                    }
+                    hadToStop = true;
+                    waitingSemaphore.acquire();
+                }
+            }
         }
-
         loco.afficherMessage(QString("Locomotive %1 accède à la section partagée.").arg(loco.numero()));
     }
 
@@ -100,23 +134,24 @@ public:
      * @param locoId L'identidiant de la locomotive qui fait l'appel
      */
     void leave(Locomotive& loco) override {
-        // TODO
         mutex.lock();
-
         occupied = false;
 
-        if (!requestQueue.empty()) {
-            semaphore.release(); // Réveille la prochaine locomotive
+        for(int i = 0; i < nbRequests; ++i) {
+            waitingSemaphore.release();
         }
 
-        loco.afficherMessage(QString("Locomotive %1 quitte la section partagée.").arg(loco.numero()));
-
         mutex.unlock();
+
+        semaphore.release();
+        afficher_message(qPrintable(QString("The engine no. %1 leaves the shared section.").arg(loco.numero())));
     }
 
     void togglePriorityMode() {
         mutex.lock();
-        mode (mode == PriorityMode::HIGH_PRIORITY) ? PriorityMode::LOW_PRIORITY : PriorityMode::HIGH_PRIORITY;
+        // Change le mode de priorité
+        mode = (mode == PriorityMode::HIGH_PRIORITY) ? PriorityMode::LOW_PRIORITY : PriorityMode::HIGH_PRIORITY;
+        // Trie la file d'attente (normalement, on ne devrait pas avoir de locomotives en attente)
         sortRequestQueue();
         afficher_message(qPrintable(QString("Priority mode changed to %1").arg(mode == PriorityMode::HIGH_PRIORITY ? "HIGH" : "LOW")));
         mutex.unlock();
@@ -125,29 +160,53 @@ public:
 private:
 
     void sortRequestQueue() {
-        if (priorityMode == PriorityMode::HIGH_PRIORITY) {
-            std::sort(requestQueue.begin(), requestQueue.end(),
-                      [](const std::pair<int, int>& a, const std::pair<int, int>& b) {
-                          return a.first > b.first; // Tri par priorité décroissante
-                      });
+        // Trie la file par priorité décroissante si le mode est HIGH_PRIORITY, sinon par priorité croissante
+        // De la sorte, on pourra retirer l'élément le plus prioritaire de la file en retirant l'élément au début
+        if (mode == PriorityMode::HIGH_PRIORITY) {
+            std::stable_sort(requestQueue.begin(), requestQueue.end(),
+                             [](const std::pair<int, int>& a, const std::pair<int, int>& b) {
+                                 return a.first > b.first; // Tri par priorité décroissante
+                             });
         } else {
-            std::sort(requestQueue.begin(), requestQueue.end(),
-                      [](const std::pair<int, int>& a, const std::pair<int, int>& b) {
-                          return a.first < b.first; // Tri par priorité croissante
-                      });
+            // Même chose que ci-dessus, mais en ordre décroissant, donc on pourra retirer l'élément le moins prioritaire de la file en retirant l'élément à la fin
+            std::stable_sort(requestQueue.begin(), requestQueue.end(),
+                             [](const std::pair<int, int>& a, const std::pair<int, int>& b) {
+                                 return a.first < b.first; // Tri par priorité croissante
+                             });
         }
     }
 
-    /* A vous d'ajouter ce qu'il vous faut */
+    /**
+     * @brief semaphore Sémaphore pour gérer l'accès à la section partagée
+     */
+    PcoSemaphore semaphore;
 
-    // Méthodes privées ...
-    // Attributes privés ...
+    /**
+     * @brief waitingSemaphore Sémaphore pour gérer l'attente des locomotives
+     */
+    PcoSemaphore waitingSemaphore;
 
-    PcoSemaphore semaphore{0};
+    /**
+     * @brief mutex Mutex pour protéger l'accès à canGoWithoutStop
+     */
     PcoMutex mutex;
+
+    /**
+     * @brief occupied Indique si la section partagée est occupée (dont si l'accès a déjà été donné à une locomotive)
+     */
+    bool occupied;
+
+    /**
+     * @brief priorityMode Mode de priorité de la section partagée
+     */
     PriorityMode mode;
-    std::vector<std::pair<int, int>> requestQueue;
-    bool occupied; 
+
+    /**
+     * @brief requestQueue File d'attente des requêtes pour la section partagée
+     */
+    std::deque<std::pair<int, int>> requestQueue;
+
+    int nbRequests;
 };
 
 

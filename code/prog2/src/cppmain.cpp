@@ -108,7 +108,7 @@ int cmain()
 
     // Création de la section partagée
     std::shared_ptr<SharedSectionInterface> sharedSection = std::make_shared<SharedSection>();
-    std::shared_ptr<SharedStation> sharedStation = std::make_shared<SharedStation>(trainsExisting.size());
+    std::shared_ptr<SharedStation> sharedStation = std::make_shared<SharedStation>(trainsExisting.size(), sharedSection);
 
     std::vector<std::pair<int, int>> directionsTrain0 = {{14, DEVIE}, {21, DEVIE}};
     std::vector<std::pair<int, int>> directionsTrain1 = {{14, TOUT_DROIT}, {21, TOUT_DROIT}};

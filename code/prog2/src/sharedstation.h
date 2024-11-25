@@ -4,6 +4,8 @@
 #include <pcosynchro/pcosemaphore.h>
 #include <pcosynchro/pcomutex.h>
 
+#include "sharedsection.h"
+
 /**
  * @brief La classe SharedStation représente un moyen de coordiner l'arrivée de plusieurs trains à leur station respective
  */
@@ -14,7 +16,7 @@ public:
      * @brief SharedStation Constructeur de la classe SharedStation
      * @param nbTrains Le nombre de trains qui doivent arriver à la station
      */
-    SharedStation(int nbTrains);
+    SharedStation(int nbTrains, std::shared_ptr<SharedSectionInterface> sharedSection);
 
     /**
      * @brief trainArrived Méthode à appeler lorsqu'un train arrive à la station
@@ -41,6 +43,12 @@ private:
      * @brief stationSemaphore Sémaphore pour attendre que tous les trains soient arrivés à la station
      */
     PcoSemaphore stationSemaphore;
+
+    /**
+     * @brief sharedSection La section partagée pour laquelle on doit changer la priorité quand tous les trains sont à la station (la même que celle des locomotives)
+     */
+    std::shared_ptr<SharedSectionInterface> sharedSection;
+
 };
 
 #endif // SHARED_STATION_H

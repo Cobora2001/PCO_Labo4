@@ -26,9 +26,15 @@ void LocomotiveBehavior::run()
             // On attend le contact de la shared section (plus exactement, le point de réservation de la seciton partagée calculée via la définition du incoming buffer)
             attendre_contact(sharedSectionReserveContact);
 
+            sharedSection->request(loco, loco.numero(), loco.priority);
+            loco.afficherMessage("Réservation de la section partagée.");
+
+            // On attend le contact d'accès à la section partagée
+            attendre_contact(sharedSectionAccessContact);
+
             // On réserve la section partagée
             sharedSection->access(loco);
-            loco.afficherMessage("Réservation de la section partagée.");
+            loco.afficherMessage("Accès à la section partagée.");
 
             // On dirige les aiguillages pour que la locomotive puisse entrer dans la section partagée, et en sortir
             for(auto& direction : sharedSectionDirections) {
@@ -114,36 +120,43 @@ void LocomotiveBehavior::printCompletionMessage() {
 }
 
 void LocomotiveBehavior::determineContactPoints() {
-    // Variables temporaires pour les index d'entrée et de sortie
-    int targetIndexEntry;
-    int targetIndexExit;
+    // Variables temporaires pour les index d'entrée dans le buffer, le point d'accès, et le point de sortie
+    int targetIndexEntry;  // C'est le point auquel on fait la requête pour la section partagée
+    int targetIndexAccess; // C'est le point auquel on accède à la section partagée, ou sinon on s'arrête
+    int targetIndexExit;   // C'est le point auquel on libère la section partagée
 
     // On détermine les points de réservation et de libération de la section partagée
     if(isWritenForward) {
         if(directionIsForward) { // Si la locomotive va en avant et que la section partagée est écrite de gauche à droite
-            targetIndexEntry = entranceIndex - INCOMING_BUFFER; // On recule l'indexe depuis notre point d'entrée, qui sert bien d'entrée dans cette configuration
-            targetIndexExit  = exitIndex     + OUTGOING_BUFFER; // On avance l'indexe depuis notre point de sortie, qui sert bien de sortie dans cette configuration
+            targetIndexEntry  = entranceIndex - INCOMING_BUFFER; // On recule l'indexe depuis notre point d'entrée, qui sert bien d'entrée dans cette configuration
+            targetIndexAccess = entranceIndex - ACCESS_BUFFER;   // Même chose que ci-dessus, mais pour le point d'accès
+            targetIndexExit   = exitIndex     + OUTGOING_BUFFER; // On avance l'indexe depuis notre point de sortie, qui sert bien de sortie dans cette configuration
         } else { // Si la locomotive va en arrière et que la section partagée est écrite de gauche à droite
-            targetIndexEntry = exitIndex     + INCOMING_BUFFER; // On avance l'indexe depuis notre point de sortie, qui sert d'enrée si on va en arrière
-            targetIndexExit  = entranceIndex - OUTGOING_BUFFER; // On recule l'indexe depuis notre point d'entrée, qui sert de sortie si on va en arrière
+            targetIndexEntry  = exitIndex     + INCOMING_BUFFER; // On avance l'indexe depuis notre point de sortie, qui sert d'enrée si on va en arrière
+            targetIndexAccess = exitIndex     + ACCESS_BUFFER;   // Même chose que ci-dessus, mais pour le point d'accès
+            targetIndexExit   = entranceIndex - OUTGOING_BUFFER; // On recule l'indexe depuis notre point d'entrée, qui sert de sortie si on va en arrière
         }
     } else {
         if(directionIsForward) { // Si la locomotive va en avant et que la section partagée est écrite de droite à gauche
-            targetIndexEntry = exitIndex     - INCOMING_BUFFER; // On recule l'indexe depuis notre point de sortie, qui sert d'entrée si on va en avant alors que la section est écrite de droite à gauche
-            targetIndexExit  = entranceIndex + OUTGOING_BUFFER; // On avance l'indexe depuis notre point d'entrée, qui sert de sortie si on va en avant alors que la section est écrite de droite à gauche
+            targetIndexEntry  = exitIndex     - INCOMING_BUFFER; // On recule l'indexe depuis notre point de sortie, qui sert d'entrée si on va en avant alors que la section est écrite de droite à gauche
+            targetIndexAccess = exitIndex     - ACCESS_BUFFER;   // Même chose que ci-dessus, mais pour le point d'accès
+            targetIndexExit   = entranceIndex + OUTGOING_BUFFER; // On avance l'indexe depuis notre point d'entrée, qui sert de sortie si on va en avant alors que la section est écrite de droite à gauche
         } else { // Si la locomotive va en arrière et que la section partagée est écrite de droite à gauche
-            targetIndexEntry = entranceIndex + INCOMING_BUFFER; // On avance l'indexe depuis notre point d'entrée, qui sert bien d'entrée dans cette configuration, même si on va en arrière
-            targetIndexExit  = exitIndex     - OUTGOING_BUFFER; // On recule l'indexe depuis notre point de sortie, qui sert bien de sortie dans cette configuration, même si on va en arrière
+            targetIndexEntry  = entranceIndex + INCOMING_BUFFER; // On avance l'indexe depuis notre point d'entrée, qui sert bien d'entrée dans cette configuration, même si on va en arrière
+            targetIndexAccess = entranceIndex + ACCESS_BUFFER;   // Même chose que ci-dessus, mais pour le point d'accès
+            targetIndexExit   = exitIndex     - OUTGOING_BUFFER; // On recule l'indexe depuis notre point de sortie, qui sert bien de sortie dans cette configuration, même si on va en arrière
 
         }
     }
 
     // On s'assure que les index sont dans les limites du vecteur
-    targetIndexEntry = (targetIndexEntry + contacts.size()) % contacts.size();
-    targetIndexExit  = (targetIndexExit  + contacts.size()) % contacts.size();
+    targetIndexEntry  = (targetIndexEntry  + contacts.size()) % contacts.size();
+    targetIndexAccess = (targetIndexAccess + contacts.size()) % contacts.size();
+    targetIndexExit   = (targetIndexExit   + contacts.size()) % contacts.size();
 
     // On assigne les contacts de réservation et de libération de la section partagée
     sharedSectionReserveContact = contacts[targetIndexEntry];
+    sharedSectionAccessContact  = contacts[targetIndexAccess];
     sharedSectionReleaseContact = contacts[targetIndexExit];
 }
 
@@ -426,4 +439,9 @@ int LocomotiveBehavior::sizeSharedSection(bool sharedSectionIsCut) {
             return entranceIndex - exitIndex + 1;
         }
     }
+}
+
+void LocomotiveBehavior::setRandomPriority() {
+    // On fixe une priorité aléatoire à la locomotive
+    loco.priority = rand() % 100;
 }

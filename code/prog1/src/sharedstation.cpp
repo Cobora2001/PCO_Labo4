@@ -4,6 +4,14 @@
 // /_/   \___/\____/ /____/\___/____//_/   //
 //
 
+// ==========================================================
+// Fichier : sharedstation.cpp
+// Auteur  : Thomas Vuillemier et Sebastian Diaz
+// Date    : 25/11/2024
+// Description : Implémentation de la classe SharedStation pour gérer
+//               l'arrivée de plusieurs trains à leur station respective
+// ==========================================================
+
 #include <chrono>
 #include <thread>
 

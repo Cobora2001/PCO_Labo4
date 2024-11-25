@@ -4,6 +4,14 @@
 // /_/   \___/\____/ /____/\___/____//_/   //
 //
 
+// ==========================================================
+// Fichier : sharedsection.h
+// Auteur  : Thomas Vuillemier et Sebastian Diaz
+// Date    : 23/11/2024
+// Description : Définition de la classe SharedSection pour gérer
+//               l'accès synchronisé à une section partagée
+// ==========================================================
+
 #ifndef SHAREDSECTION_H
 #define SHAREDSECTION_H
 

@@ -4,6 +4,14 @@
 // /_/   \___/\____/ /____/\___/____//_/   //
 //
 
+// ==========================================================
+// Fichier : cppmain.cpp
+// Auteur  : Thomas Vuillemier et Sebastian Diaz
+// Date    : 25/11/2024
+// Description : Programme principal 
+//               Gestion des trains
+// ==========================================================
+
 #include "ctrain_handler.h"
 
 #include "locomotive.h"

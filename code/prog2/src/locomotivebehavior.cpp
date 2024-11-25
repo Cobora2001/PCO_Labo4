@@ -4,6 +4,15 @@
 // /_/   \___/\____/ /____/\___/____//_/   //
 //
 
+// ==========================================================
+// Fichier : locomotivebehavior.cpp
+// Auteur  : Thomas Vuillemier et Sebastian Diaz
+// Date    : 25/11/2024
+// Description : Implémentation du comportement des locomotives, incluant
+//               la gestion des accès à la section partagée et la synchronisation
+//               en gare.
+// ==========================================================
+
 #include "locomotivebehavior.h"
 #include "ctrain_handler.h"
 

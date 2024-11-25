@@ -4,6 +4,16 @@
 // /_/   \___/\____/ /____/\___/____//_/   //
 //
 
+// ==========================================================
+// Fichier : locomotivebehavior.h
+// Auteur  : Thomas Vuillemier et Sebastian Diaz
+// Date    : 25/11/2024
+// Description : Déclaration de la classe LocomotiveBehavior,
+//               définissant le comportement des locomotives
+//               avec gestion de la section partagée et synchronisation
+//               en gare.
+// ==========================================================
+
 #ifndef LOCOMOTIVEBEHAVIOR_H
 #define LOCOMOTIVEBEHAVIOR_H
 

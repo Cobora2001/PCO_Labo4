@@ -53,7 +53,7 @@ public:
         loco(loco), 
         sharedSection(sharedSection), 
         sharedSectionDirections(sharedSectionDirections), 
-        contacts(contacts), isWritenForward(isWrittenForward),  
+        contacts(contacts), isWrittenForward(isWrittenForward),  
         entrance(entrance), exit(exit), sharedStation(sharedStation) {
 
         // Initialisation des indices d'entrée et de sortie de la section partagée
@@ -91,7 +91,8 @@ public:
         // Sélectionne un nombre aléatoire de tours à effectuer
         nbOfTurns = getRandomTurnNumber();
 
-
+        // Afficher la locomotive via la méthode toString pour nos tests
+        loco.afficherMessage(toString());
     }
 
 protected:
@@ -241,9 +242,9 @@ protected:
     bool directionIsForward;
 
     /**
-     * @brief isWritenForward true si la section partagée est rédigée de gauche à droite dans la liste des contacts, false sinon
+     * @brief isWrittenForward true si la section partagée est rédigée de gauche à droite dans la liste des contacts, false sinon
      */
-    bool isWritenForward;
+    bool isWrittenForward;
 
     /**
      * @brief goingTowardsSharedSection true si la locomotive va vers la section partagée, false si elle va vers la station

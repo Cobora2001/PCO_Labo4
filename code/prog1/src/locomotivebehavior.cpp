@@ -36,7 +36,7 @@ void LocomotiveBehavior::run()
             }
 
             // On affiche un message pour indiquer que la locomotive est entrée dans la section partagée (donc qu'elle est sortie du buffer)
-            if(directionIsForward && isWritenForward || !directionIsForward && !isWritenForward) {
+            if(directionIsForward && isWrittenForward || !directionIsForward && !isWrittenForward) {
                 attendre_contact(entrance);
             } else {
                 attendre_contact(exit);
@@ -44,7 +44,7 @@ void LocomotiveBehavior::run()
             loco.afficherMessage("Entrée dans la section partagée.");
 
             // On attend le contact de sortie de la section partagée
-            if(directionIsForward && isWritenForward || !directionIsForward && !isWritenForward) {
+            if(directionIsForward && isWrittenForward || !directionIsForward && !isWrittenForward) {
                 attendre_contact(exit);
             } else {
                 attendre_contact(entrance);
@@ -119,7 +119,7 @@ void LocomotiveBehavior::determineContactPoints() {
     int targetIndexExit;
 
     // On détermine les points de réservation et de libération de la section partagée
-    if(isWritenForward) {
+    if(isWrittenForward) {
         if(directionIsForward) { // Si la locomotive va en avant et que la section partagée est écrite de gauche à droite
             targetIndexEntry = entranceIndex - INCOMING_BUFFER; // On recule l'indexe depuis notre point d'entrée, qui sert bien d'entrée dans cette configuration
             targetIndexExit  = exitIndex     + OUTGOING_BUFFER; // On avance l'indexe depuis notre point de sortie, qui sert bien de sortie dans cette configuration
@@ -175,7 +175,7 @@ void LocomotiveBehavior::setStationContact(int contact) {
     bool stationError;
 
     // On vérifie si la station est dans la section partagée
-    if (isWritenForward) {
+    if (isWrittenForward) {
         stationError = sharedSectionIsCut 
                 ? (stationIndex > entranceIndex || stationIndex < exitIndex)  // Si la section partagée est coupée et qu'on a écrit de gauche à droite la section partagée, alors on vérifie les bornes des contacts
                 : (stationIndex > entranceIndex && stationIndex < exitIndex); // Sinon, on vérifie que la station est bien entre les bornes de la section partagée, écrite de gauche à droite
@@ -192,7 +192,7 @@ void LocomotiveBehavior::setStationContact(int contact) {
 
     // La station ne doit pas être dans la zone tampon de la section partagée, dans le sens aller ou retour
     // On vérifie que la station n'est pas dans la zone tampon de la section partagée en avançant ou reculant dans la liste des contacts, selon le sens de la section partagée
-    if(isWritenForward) {
+    if(isWrittenForward) {
         for(int i = 1; i <= std::max(INCOMING_BUFFER, OUTGOING_BUFFER); ++i) { // Vu qu'on veut l'aller-retour, on prend le max des deux buffers
             if(contacts[(stationIndex - i + contacts.size()) % contacts.size()] == exit) {
                 throw std::runtime_error("Invalid station contact");
@@ -217,7 +217,7 @@ void LocomotiveBehavior::setStationContact(int contact) {
 }
 
 bool LocomotiveBehavior::isSharedSectionCut() {
-    return (entranceIndex > exitIndex) && isWritenForward || (entranceIndex < exitIndex) && !isWritenForward;
+    return (entranceIndex > exitIndex) && isWrittenForward || (entranceIndex < exitIndex) && !isWrittenForward;
 }
 
 bool LocomotiveBehavior::isGoingForward(int firstIndex, int secondIndex) {
@@ -240,7 +240,7 @@ void LocomotiveBehavior::isStartingPositionValid(int firstIndex, int secondIndex
     bool sharedSectionIsCut = isSharedSectionCut();
 
     // On vérifie qu'on ne commence pas dans la section partagée (ni le contact juste avant la position de départ de la locomotive, ni le contact juste après)
-    if(isWritenForward) {
+    if(isWrittenForward) {
         if(sharedSectionIsCut) { // Si la section partagée est coupée dans la liste des contacts et que la section partagée est écrite de gauche à droite
             if(firstIndex > entranceIndex || firstIndex < exitIndex || secondIndex > entranceIndex || secondIndex < exitIndex) {
                 throw std::runtime_error("Invalid starting position");
@@ -265,7 +265,7 @@ void LocomotiveBehavior::isStartingPositionValid(int firstIndex, int secondIndex
     // On ne peut aussi pas être dans la zone tampon de la section partagée
     // On va itérer à travers les contacts pour la distance du buffer depuis le point de départ du train pour vérifier que le train n'est pas dans la zone tampon
     if(directionIsForward) {
-        if(isWritenForward) { // Si la section partagée est écrite de gauche à droite dans la liste des contacts et que la locomotive va en avant (de gauche à droite dans sa liste de contacts)
+        if(isWrittenForward) { // Si la section partagée est écrite de gauche à droite dans la liste des contacts et que la locomotive va en avant (de gauche à droite dans sa liste de contacts)
             // On vérifie que la locomotive n'est pas dans la zone tampon de la section partagée
             // en avançant dans la liste des contacts depuis le contact juste devant la locomotive
             // et en vérifiant qu'on n'entre pas dans la section partagée (selon la taille du buffer)
@@ -293,7 +293,7 @@ void LocomotiveBehavior::isStartingPositionValid(int firstIndex, int secondIndex
             }
         }
     } else { // On effectue le même type de vérification, mais pour le cas où la locomotive va en arrière, donc en sens inverse de la liste des contacts, mais que la section partagée est écrite de gauche à droite
-        if(isWritenForward) {
+        if(isWrittenForward) {
             for(int i = 1; i < INCOMING_BUFFER; ++i) {
                 if(contacts[(secondIndex - i + contacts.size()) % contacts.size()] == exit) {
                     throw std::runtime_error("Invalid starting position");
@@ -346,34 +346,35 @@ void LocomotiveBehavior::setNextDestination(int secondStartIndex) {
     int targetEntrance;
 
     // On détermine le contact de l'endroit par lequel on va effectivement entrer dans la section partagée
-    if(isWritenForward) {
+    if(isWrittenForward) {
         if(directionIsForward) { // Si la section partagée est écrite de gauche à droite dans la liste des contacts et que la locomotive va en avant
-            targetEntrance = entranceIndex;
+            targetEntrance = entrance;
         } else { // Si la section partagée est écrite de gauche à droite dans la liste des contacts et que la locomotive va en arrière
-            targetEntrance = exitIndex;
+            targetEntrance = exit;
         }
     } else { // Si la section partagée est écrite de droite à gauche dans la liste des contacts et que la locomotive va en avant
         if(directionIsForward) {
-            targetEntrance = exitIndex;
+            targetEntrance = exit;
         } else { // Si la section partagée est écrite de droite à gauche dans la liste des contacts et que la locomotive va en arrière
-            targetEntrance = entranceIndex;
+            targetEntrance = entrance;
         }
     }
 
     // On cherche si on va d'abord impacter la section partagée ou la station
     while(true) {
-        if(i == targetEntrance) { // Si on arrive à l'entrée de la section partagée
+        int j = contacts[i];
+        if(j == targetEntrance) { // Si on arrive à l'entrée de la section partagée
             goingTowardsSharedSection = true;
             break;
         }
 
-        if(i == stationContact) { // Si on arrive à la station
+        if(j == stationContact) { // Si on arrive à la station
             goingTowardsSharedSection = false;
             break;
         }
 
         // On avance dans la liste des contacts
-        i = (i + 1) % contacts.size();
+        i = (directionIsForward ? i + 1 : i - 1 + contacts.size()s) % contacts.size();
     }
 
 }
@@ -390,7 +391,7 @@ QString LocomotiveBehavior::toString() {
             QString("Exit : %1\n").arg(exit) +
             QString("Station contact : %1\n").arg(stationContact) +
             QString("Direction is forward : %1\n").arg(directionIsForward) +
-            QString("Is written forward : %1\n").arg(isWritenForward) +
+            QString("Is written forward : %1\n").arg(isWrittenForward) +
             QString("Going towards shared section : %1\n").arg(goingTowardsSharedSection) +
             QString("Number of turns : %1\n").arg(nbOfTurns) +
             QString("Max number of turns : %1\n").arg(maxNbOfTurns) +
@@ -414,13 +415,13 @@ int LocomotiveBehavior::sizeSharedSection(bool sharedSectionIsCut) {
 
     // On calcule la taille de la section partagée
     if(sharedSectionIsCut) {
-        if(isWritenForward) { // Si la section partagée est coupée et que la section partagée est écrite de gauche à droite
+        if(isWrittenForward) { // Si la section partagée est coupée et que la section partagée est écrite de gauche à droite
             return contacts.size() - entranceIndex + exitIndex + 1;
         } else { // Si la section partagée est coupée et que la section partagée est écrite de droite à gauche
             return contacts.size() - exitIndex + entranceIndex + 1;
         }
     } else {
-        if(isWritenForward) { // Si la section partagée n'est pas coupée et que la section partagée est écrite de gauche à droite
+        if(isWrittenForward) { // Si la section partagée n'est pas coupée et que la section partagée est écrite de gauche à droite
             return exitIndex - entranceIndex + 1;
         } else { // Si la section partagée n'est pas coupée et que la section partagée est écrite de droite à gauche
             return entranceIndex - exitIndex + 1;

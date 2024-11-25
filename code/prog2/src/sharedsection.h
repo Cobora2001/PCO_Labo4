@@ -28,9 +28,7 @@ public:
      * @brief SharedSection Constructeur de la classe qui représente la section partagée.
      * Initialisez vos éventuels attributs ici, sémaphores etc.
      */
-    SharedSection() {
-        // TODO
-    }
+    SharedSection() :  mode(PriorityMode::HIGH_PRIORITY), occupied(false) {}
 
     /**
      * @brief request Méthode a appeler pour indiquer que la locomotive désire accéder à la
@@ -39,11 +37,27 @@ public:
      * @param locoId L'identidiant de la locomotive qui fait l'appel
      * @param entryPoint Le point d'entree de la locomotive qui fait l'appel
      */
-    void request(Locomotive& loco, int priority) override {
-        // TODO
+   void request(Locomotive& loco) override {
+        mutex.lock();
 
-        // Exemple de message dans la console globale
-        afficher_message(qPrintable(QString("The engine no. %1 requested the shared section.").arg(loco.numero())));
+        // Vérifie si la locomotive a déjà fait une demande
+        auto it = std::find_if(requestQueue.begin(), requestQueue.end(),
+                               [&loco](const std::pair<int, int>& req) { return req.second == loco.numero(); });
+
+        if (it == requestQueue.end()) {
+            // Ajoute la demande dans la file
+            requestQueue.push_back({priority, loco.numero()});
+            loco.afficherMessage(QString("Locomotive %1 a demandé la section avec priorité %2.")
+                                     .arg(loco.numero())
+                                     .arg(priority));
+        } else {
+            loco.afficherMessage(QString("Locomotive %1 a déjà une demande active.").arg(loco.numero()));
+        }
+
+        // Trie la file en fonction du mode de priorité
+        sortRequestQueue();
+
+        mutex.unlock();
     }
 
     /**
@@ -57,9 +71,26 @@ public:
      */
     void access(Locomotive &loco, int priority) override {
         // TODO
+          while (true) {
+            mutex.lock();
 
-        // Exemple de message dans la console globale
-        afficher_message(qPrintable(QString("The engine no. %1 accesses the shared section.").arg(loco.numero())));
+            // Vérifie si la locomotive est en tête de file
+            if (!requestQueue.empty() && requestQueue.front().second == loco.numero() && !occupied) {
+                occupied = true;
+                requestQueue.erase(requestQueue.begin());
+                mutex.unlock();
+                break; // La locomotive peut entrer
+            }
+
+            mutex.unlock();
+
+            // Si la locomotive ne peut pas entrer, elle attend
+            loco.arreter();
+            semaphore.acquire(); // Attend que la section soit libre
+            loco.demarrer();
+        }
+
+        loco.afficherMessage(QString("Locomotive %1 accède à la section partagée.").arg(loco.numero()));
     }
 
     /**
@@ -70,21 +101,53 @@ public:
      */
     void leave(Locomotive& loco) override {
         // TODO
+        mutex.lock();
 
-        // Exemple de message dans la console globale
-        afficher_message(qPrintable(QString("The engine no. %1 leaves the shared section.").arg(loco.numero())));
+        occupied = false;
+
+        if (!requestQueue.empty()) {
+            semaphore.release(); // Réveille la prochaine locomotive
+        }
+
+        loco.afficherMessage(QString("Locomotive %1 quitte la section partagée.").arg(loco.numero()));
+
+        mutex.unlock();
     }
 
     void togglePriorityMode() {
-        /* TODO */
+        mutex.lock();
+        mode (mode == PriorityMode::HIGH_PRIORITY) ? PriorityMode::LOW_PRIORITY : PriorityMode::HIGH_PRIORITY;
+        sortRequestQueue();
+        afficher_message(qPrintable(QString("Priority mode changed to %1").arg(mode == PriorityMode::HIGH_PRIORITY ? "HIGH" : "LOW")));
+        mutex.unlock();
     }
 
 private:
+
+    void sortRequestQueue() {
+        if (priorityMode == PriorityMode::HIGH_PRIORITY) {
+            std::sort(requestQueue.begin(), requestQueue.end(),
+                      [](const std::pair<int, int>& a, const std::pair<int, int>& b) {
+                          return a.first > b.first; // Tri par priorité décroissante
+                      });
+        } else {
+            std::sort(requestQueue.begin(), requestQueue.end(),
+                      [](const std::pair<int, int>& a, const std::pair<int, int>& b) {
+                          return a.first < b.first; // Tri par priorité croissante
+                      });
+        }
+    }
 
     /* A vous d'ajouter ce qu'il vous faut */
 
     // Méthodes privées ...
     // Attributes privés ...
+
+    PcoSemaphore semaphore{0};
+    PcoMutex mutex;
+    PriorityMode mode;
+    std::vector<std::pair<int, int>> requestQueue;
+    bool occupied; 
 };
 
 

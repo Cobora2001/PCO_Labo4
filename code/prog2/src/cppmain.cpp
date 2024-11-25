@@ -96,8 +96,8 @@ int cmain()
 
     // Test 2 : la section critique est écrite en allant de droite à gauche dans la liste des contacts, et elle est en un seul morceau
 
-    std::vector<int> contactsTrain0 = {15, 16, 23, 24, 22, 28, 33, 34, 5, 6, 7, 14};
-    std::vector<int> contactsTrain1 = {11, 12, 13, 19, 24, 22, 28, 33, 31, 1, 2, 3, 4, 10};
+    // std::vector<int> contactsTrain0 = {15, 16, 23, 24, 22, 28, 33, 34, 5, 6, 7, 14};
+    // std::vector<int> contactsTrain1 = {11, 12, 13, 19, 24, 22, 28, 33, 31, 1, 2, 3, 4, 10};
 
     // Test 3 : la section critique est écrite en allant de gauche à droite dans la liste des contacts, et elle est en deux morceaux
 
@@ -106,8 +106,8 @@ int cmain()
 
     // Test 4 : la section critique est écrite en allant de droite à gauche dans la liste des contacts, et elle est en deux morceaux
 
-    // std::vector<int> contactsTrain0 = {28, 33, 34, 5, 6, 7, 14, 15, 16, 23, 24, 22};
-    // std::vector<int> contactsTrain1 = {28, 33, 31, 1, 2, 3, 4, 10, 11, 12, 13, 19, 24, 22};
+    std::vector<int> contactsTrain0 = {28, 33, 34, 5, 6, 7, 14, 15, 16, 23, 24, 22};
+    std::vector<int> contactsTrain1 = {28, 33, 31, 1, 2, 3, 4, 10, 11, 12, 13, 19, 24, 22};
 
     /***************************************************************************************************
      * Directions des aiguillages pour la section partagée (à changer selon votre maquette et trajets) *

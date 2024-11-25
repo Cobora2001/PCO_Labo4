@@ -4,6 +4,16 @@
 // /_/   \___/\____/ /____/\___/____//_/   //
 //
 
+// ==========================================================
+// Fichier : locomotivebehavior.h
+// Auteur  : Thomas Vuillemier et Sebastian Diaz
+// Date    : 25/11/2024
+// Description : Déclaration de la classe LocomotiveBehavior,
+//               définissant le comportement des locomotives
+//               avec gestion de la section partagée et synchronisation
+//               en gare.
+// ==========================================================
+
 #ifndef LOCOMOTIVEBEHAVIOR_H
 #define LOCOMOTIVEBEHAVIOR_H
 
@@ -29,7 +39,8 @@ public:
      * \param loco la locomotive dont on représente le comportement
      * \param sharedSection la section partagée
      * \param sharedSectionDirections les directions des aiguillages pour la section partagée
-     * \param isWrittenForward si la section partagée est rédigée de gauche à droite dans la liste des contacts (relativement à ce qu'on a défini comme étant l'entrée et la sortie de la section partagée)
+     * \param isWrittenForward si la section partagée est rédigée de gauche à droite dans la liste des contacts
+     * (relativement à ce qu'on a défini comme étant l'entrée et la sortie de la section partagée)
      * \param contacts les contacts de la locomotive
      * \param entrance le contact d'entrée de la section partagée
      * \param exit le contact de sortie de la section partagée
@@ -45,48 +56,12 @@ public:
                         int entrance, int exit,
                         int trainFirstStart, int trainSecondStart,
                         int stationContact,
-                        std::shared_ptr<SharedStation> sharedStation) : 
-        loco(loco), 
-        sharedSection(sharedSection), 
-        sharedSectionDirections(sharedSectionDirections), 
-        contacts(contacts), isWritenForward(isWrittenForward),  
-        entrance(entrance), exit(exit), sharedStation(sharedStation) {
+                        std::shared_ptr<SharedStation> sharedStation);
 
-        // Initialisation des indices d'entrée et de sortie de la section partagée
-        calculateEntranceAndExitIndexes();
-
-        // Index des contacts de démarrage
-        int trainFirstIndex = getIndexOfContact(trainFirstStart);
-        int trainSecondIndex = getIndexOfContact(trainSecondStart);
-
-        // Détermine si la locomotive va en avant ou en arrière, en assumant que les positions de départ sont valides (on vérifie ça plus tard, et on a besoin de cette information pour la suite)
-        directionIsForward = isGoingForward(trainFirstIndex, trainSecondIndex);
-
-        // Vérifie si la position de départ est valide
-        isStartingPositionValid(trainFirstIndex, trainSecondIndex);
-
-        // Vérifie si la section partagée est coupée (dans la liste des contacts)
-        bool sharedSectionIsCut = isSharedSectionCut();
-
-        // Détermine si la locomotive va vers la section partagée ou vers la station
-        int sizeOfSharedSection = sizeSharedSection(sharedSectionIsCut);
-
-        // Vérifie que la trajectoire de la locomotive est assez grande pour avoir de la place pour
-        // la section partagée, son buffer, la position initial de la locomotive et la station
-        checkMinimalSizeOfContacts(sizeOfSharedSection);
-
-        // Détermine les points de réserve et de libération de la section partagée
-        determineContactPoints();
-
-        // Détermine le contact de la station
-        setStationContact(stationContact);
-
-        // Détermine si la locomotive va vers la section partagée ou vers la station
-        setNextDestination(trainSecondIndex);
-
-        // Sélectionne un nombre aléatoire de tours à effectuer
-        nbOfTurns = getRandomTurnNumber();   
-    }
+    /*!
+     * \brief initializeStaticMembers Initialise les membres statiques de la classe
+     */
+    static void initializeStaticMembers();
 
 protected:
     /*!
@@ -105,7 +80,8 @@ protected:
     void printCompletionMessage() override;
 
     /*!
-     * \brief determineContactPoints Détermine les points de contact de la locomotive avec la shared section selon la direction de la locomotive
+     * \brief determineContactPoints Détermine les points de contact de la locomotive
+       avec la shared section selon la direction de la locomotive
     */
     void determineContactPoints();
 
@@ -155,7 +131,8 @@ protected:
     int getRandomTurnNumber();
 
     /*!
-     * \brief checkMinimalSizeOfContacts Vérifie si la liste des contacts est assez grande pour contenir la section partagée, les buffers et la station
+     * \brief checkMinimalSizeOfContacts Vérifie si la liste des contacts est assez grande 
+       pour contenir la section partagée, les buffers et la station
      * \param sizeOfSharedSection la taille de la section partagée
      */
     void checkMinimalSizeOfContacts(int sizeOfSharedSection);
@@ -220,17 +197,20 @@ protected:
     std::vector<std::pair<int, int>> sharedSectionDirections;
 
     /**
-     * @brief directionIsForward true si la locomotive va en avant (de gauche à droite dans sa liste de contacts), false sinon
+     * @brief directionIsForward true si la locomotive va en avant (de gauche à droite dans sa liste de contacts),
+     * false sinon
      */
     bool directionIsForward;
 
     /**
-     * @brief isWritenForward true si la section partagée est rédigée de gauche à droite dans la liste des contacts, false sinon
+     * @brief isWrittenForward true si la section partagée est rédigée de gauche à droite dans la liste des contacts,
+     * false sinon
      */
-    bool isWritenForward;
+    bool isWrittenForward;
 
     /**
-     * @brief goingTowardsSharedSection true si la locomotive va vers la section partagée, false si elle va vers la station
+     * @brief goingTowardsSharedSection true si la locomotive va vers la section partagée,
+     * false si elle va vers la station
      */
     bool goingTowardsSharedSection;
 
@@ -268,6 +248,21 @@ protected:
      * @brief minNbOfTurns Nombre minimal de tours à effectuer
      */
     static const int minNbOfTurns = 1;
+
+        /**
+     * @brief rd Générateur de nombres aléatoires
+     */
+    static std::random_device rd;
+
+    /**
+     * @brief gen Générateur de nombres aléatoires
+     */
+    static std::mt19937 gen;
+
+    /**
+     * @brief turnDistribution Distribution de tours
+     */
+    static std::uniform_int_distribution<int> turnDistribution;
 };
 
 #endif // LOCOMOTIVEBEHAVIOR_H

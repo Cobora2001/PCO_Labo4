@@ -4,6 +4,14 @@
 // /_/   \___/\____/ /____/\___/____//_/   //
 //
 
+// ==========================================================
+// Fichier : sharedsection.h
+// Auteur  : Thomas Vuillemier et Sebastian Diaz
+// Date    : 23/11/2024
+// Description : Définition de la classe SharedSection pour gérer
+//               l'accès synchronisé à une section partagée
+// ==========================================================
+
 #ifndef SHAREDSECTION_H
 #define SHAREDSECTION_H
 
@@ -34,20 +42,47 @@ public:
     /**
      * @brief access Méthode à appeler pour accéder à la section partagée, doit arrêter le thread
      * de la locomotive si la section est occupée par une autre locomotive
+     * @param loco La locomotive qui essaie accéder à la section partagée
      */
     void access(Locomotive &loco) override {
-        bool canGo = obtainRightToGoWithoutStop();
 
+        // On mémorise la vitesse actuelle de la locomotive au cas où elle devrait s'arrêter
         int vitesse = loco.vitesse();
 
-        if (!canGo) {
-            loco.fixerVitesse(0);
-        }
+        // On mémorise si la locomotive a dû s'arrêter ou non
+        bool couldGoWithoutStop = true;
 
-        semaphore.acquire();
+        // Flag pour savoir si la locomotive peut accéder à la section partagée et sortir de la boucle
+        bool canGo = false;
+
+        while(!canGo) {
+            mutex.lock();
+            // Si la section partagée est occupée, on met la locomotive en attente
+            if(occupied) {
+                ++nbWaiting;
+                mutex.unlock();
+                // Si la locomotive n'a pas déjà été arrêtée, on l'arrête
+                if(couldGoWithoutStop) {
+                    loco.fixerVitesse(0);
+                    couldGoWithoutStop = false;
+                }
+                // On attend que qu'on réveille la locomotive
+                waitingSemaphore.acquire();
+            } else {
+                // On occupe la section partagée
+                occupied = true;
+                mutex.unlock();
+                // On mémorise qu'on peut sortir de la boucle
+                canGo = true;
+                // On accède à la section partagée
+                semaphore.acquire();
+            }
+
+        }
         afficher_message(qPrintable(QString("The engine no. %1 accesses the shared section.").arg(loco.numero())));
 
-        if(!canGo) {
+        // On redémarre la locomotive si elle a été arrêtée
+        if(!couldGoWithoutStop) {
             loco.fixerVitesse(vitesse);
         }
     }
@@ -58,7 +93,14 @@ public:
      * @param loco La locomotive qui quitte la section partagée
      */
     void leave(Locomotive& loco) override {
-        setCanGoWithoutStop();
+        mutex.lock();
+        occupied = false;
+        for(int i = 0; i < nbWaiting; ++i) {
+            waitingSemaphore.release();
+        }
+
+        nbWaiting = 0;
+        mutex.unlock();
 
         semaphore.release();
         afficher_message(qPrintable(QString("The engine no. %1 leaves the shared section.").arg(loco.numero())));
@@ -67,40 +109,29 @@ public:
 private:
 
     /**
-     * @brief obtainRightToGoWithoutStop Méthode à appeler pour obtenir le droit de passer sans s'arrêter
-     * @return true si la locomotive peut passer sans s'arrêter, false sinon
-     */
-    bool obtainRightToGoWithoutStop() {
-        mutex.lock();
-        bool canGo = canGoWithoutStop;
-        canGoWithoutStop = false;
-        mutex.unlock();
-        return canGo;
-    }
-
-    /**
-     * @brief setCanGoWithoutStop Méthode à appeler pour donner le droit de passer sans s'arrêter après être passé
-     */
-    void setCanGoWithoutStop() {
-        mutex.lock();
-        canGoWithoutStop = true;
-        mutex.unlock();
-    }
-
-    /**
      * @brief semaphore Sémaphore pour gérer l'accès à la section partagée
      */
     PcoSemaphore semaphore{1};
 
     /**
-     * @brief mutex Mutex pour protéger l'accès à canGoWithoutStop
+     * @brief mutex Mutex pour protéger l'accès à occupied
      */
     PcoMutex mutex;
 
     /**
-     * @brief canGoWithoutStop Indique si la locomotive peut passer sans s'arrêter
+     * @brief occupied Indique si la section partagée est occupée
      */
-    bool canGoWithoutStop;
+    bool occupied = false;
+
+    /**
+     * @brief nbWaiting Nombre de locomotives en attente
+     */
+    int nbWaiting = 0;
+
+    /**
+     * @brief waitingSemaphore Sémaphore pour gérer l'attente des locomotives
+     */
+    PcoSemaphore waitingSemaphore{0};
 };
 
 

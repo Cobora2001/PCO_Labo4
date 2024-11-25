@@ -1,3 +1,11 @@
+// ==========================================================
+// Fichier : sharedstation.h
+// Auteur  : Thomas Vuillemier et Sebastian Diaz
+// Date    : 25/11/2024
+// Description : Définition de la classe SharedStation pour gérer
+//               l'arrivée de plusieurs trains à leur station respective
+// ==========================================================
+
 #ifndef SHARED_STATION_H
 #define SHARED_STATION_H
 
@@ -5,7 +13,8 @@
 #include <pcosynchro/pcomutex.h>
 
 /**
- * @brief La classe SharedStation représente un moyen de coordiner l'arrivée de plusieurs trains à leur station respective
+ * @brief La classe SharedStation représente un moyen de coordiner 
+ * l'arrivée de plusieurs trains à leur station respective
  */
 class SharedStation
 {

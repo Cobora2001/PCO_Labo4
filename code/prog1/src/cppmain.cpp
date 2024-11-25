@@ -17,7 +17,7 @@
 
 // Locomotive A
 
-static Locomotive locoA(0 /* Numéro (pour commande trains sur maquette réelle) */, 15 /* Vitesse */);
+static Locomotive locoA(0 /* Numéro (pour commande trains sur maquette réelle) */, 10 /* Vitesse */);
 // Versions alternatives pour différents tests
 // static Locomotive locoA(0 /* Numéro (pour commande trains sur maquette réelle) */, 4 /* Vitesse */);
 // static Locomotive locoA(0 /* Numéro (pour commande trains sur maquette réelle) */, 20 /* Vitesse */);
@@ -109,14 +109,14 @@ int cmain()
     // Test 1 : la section critique est écrite en allant de gauche à droite dans la liste des contacts, 
     // et elle est en un seul morceau
 
-    // std::vector<int> contactsTrain0 = {14, 7, 6, 5, 34, 33, 28, 22, 24, 23, 16, 15};
-    // std::vector<int> contactsTrain1 = {10, 4, 3, 2, 1, 31, 33, 28, 22, 24, 19, 13, 12, 11};
+    std::vector<int> contactsTrain0 = {14, 7, 6, 5, 34, 33, 28, 22, 24, 23, 16, 15};
+    std::vector<int> contactsTrain1 = {10, 4, 3, 2, 1, 31, 33, 28, 22, 24, 19, 13, 12, 11};
 
     // Test 2 : la section critique est écrite en allant de droite à gauche dans la liste des contacts, 
     // et elle est en un seul morceau
 
-    std::vector<int> contactsTrain0 = {15, 16, 23, 24, 22, 28, 33, 34, 5, 6, 7, 14};
-    std::vector<int> contactsTrain1 = {11, 12, 13, 19, 24, 22, 28, 33, 31, 1, 2, 3, 4, 10};
+    // std::vector<int> contactsTrain0 = {15, 16, 23, 24, 22, 28, 33, 34, 5, 6, 7, 14};
+    // std::vector<int> contactsTrain1 = {11, 12, 13, 19, 24, 22, 28, 33, 31, 1, 2, 3, 4, 10};
 
     // Test 3 : la section critique est écrite en allant de gauche à droite dans la liste des contacts, 
     // et elle est en deux morceaux
@@ -153,24 +153,61 @@ int cmain()
     // On ne change pas ces valeurs entre nos tests ici, 
     // mais on peut faire des tests avec des valeurs différentes
 
-    //int contactBehindTrain0Start  = 14; //merder ici
-    //int contactInFrontTrain0Start = 7;
-    //int contactBehindTrain1Start  = 10;
-    //int contactInFrontTrain1Start = 4;
+    int contactBehindTrain0Start  = 14; //merder ici
+    int contactInFrontTrain0Start = 7;
+    int contactBehindTrain1Start  = 10;
+    int contactInFrontTrain1Start = 4;
 
     // Si on veut aller dans l'autre sens, on change ici:
 
-    //int contactBehindTrain0Start  = 7;
-    //int contactInFrontTrain0Start = 14;
-    //int contactBehindTrain1Start  = 4;
-    //int contactInFrontTrain1Start = 10;
+    // int contactBehindTrain0Start  = 7;
+    // int contactInFrontTrain0Start = 14;
+    // int contactBehindTrain1Start  = 4;
+    // int contactInFrontTrain1Start = 10;
 
     // Si on veut que les trains n'aillent pas dans le même sens, on change ici:
 
-    int contactBehindTrain0Start  = 14;
-    int contactInFrontTrain0Start = 7;
-    int contactBehindTrain1Start  = 4;
-    int contactInFrontTrain1Start = 10;
+    // int contactBehindTrain0Start  = 14;
+    // int contactInFrontTrain0Start = 7;
+    // int contactBehindTrain1Start  = 4;
+    // int contactInFrontTrain1Start = 10;
+
+    // Tests de la position de départ des locos - ces positions devraient causer un throw
+
+    // Pas dans la liste de contacts
+
+    // int contactBehindTrain0Start  = 4;
+    // int contactInFrontTrain0Start = 10;
+    // int contactBehindTrain1Start  = 14;
+    // int contactInFrontTrain1Start = 7;
+
+    // Dans la section partagée
+
+    // int contactBehindTrain0Start  = 22;
+    // int contactInFrontTrain0Start = 28;
+    // int contactBehindTrain1Start  = 24;
+    // int contactInFrontTrain1Start = 22;
+
+    // Dans le buffer
+
+    // int contactBehindTrain0Start  = 5;
+    // int contactInFrontTrain0Start = 34;
+    // int contactBehindTrain1Start  = 24;
+    // int contactInFrontTrain1Start = 19;
+
+    // Contacts confondus
+
+    // int contactBehindTrain0Start  = 14;
+    // int contactInFrontTrain0Start = 14;
+    // int contactBehindTrain1Start  = 3;
+    // int contactInFrontTrain1Start = 3;
+
+    // Contacts trop éloignés l'un de l'autre
+
+    // int contactBehindTrain0Start  = 15;
+    // int contactInFrontTrain0Start = 7;
+    // int contactBehindTrain1Start  = 13;
+    // int contactInFrontTrain1Start = 11;
 
     // On remarque qu'on doit mettre celui qui est devant en premier dans les paramètres de la fonction fixerPosition,
     // et celui qui est derrière en deuxième
@@ -206,19 +243,48 @@ int cmain()
     int entrance = 33;
     int exit = 24;
 
+    // Tests de la position de la section partagée - ces positions devraient causer un throw
+
+    // Entrée est la même que la sortie
+
+    // int entrance = 33;
+    // int exit = 33;
+
+    // Pas dans la liste des contacts
+
+    // int entrance = 35;
+    // int exit = 77;
+
     // On définit le contact de la station. Cela ne change pas entre nos tests ici
     int stationTrain0 = 6;
-    int stationTrain1 = 12; //ici faut casser
+    int stationTrain1 = 12;
+
+    // Tests de la position initiale de la station - ces positions devraient causer un throw
+
+    // Dans le buffer
+
+    // int stationTrain0 = 5;
+    // int stationTrain1 = 13;
+
+    // Dans la section partagée
+
+    // int stationTrain0 = 22;
+    // int stationTrain1 = 28;
+
+    // Pas dans la liste de contacts
+
+    // int stationTrain0 = 50;
+    // int stationTrain1 = 0;
 
     // Test 1 et Test 3 : la section critique est écrite en allant de gauche à droite dans la liste des contacts
 
-    // bool isWrittenForwardTrain0 = true;
-    // bool isWrittenForwardTrain1 = true;
+    bool isWrittenForwardTrain0 = true;
+    bool isWrittenForwardTrain1 = true;
 
     // Test 2 et Test 4 : la section critique est écrite en allant de droite à gauche dans la liste des contacts
 
-    bool isWrittenForwardTrain0 = false;
-    bool isWrittenForwardTrain1 = false;
+    // bool isWrittenForwardTrain0 = false;
+    // bool isWrittenForwardTrain1 = false;
 
     // Création des threads pour les locos
     // Cela ne change pas entre nos tests ici

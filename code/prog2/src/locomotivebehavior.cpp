@@ -89,14 +89,14 @@ void LocomotiveBehavior::run()
             attendre_contact(sharedSectionReserveContact);
 
             sharedSection->request(loco, loco.numero(), loco.priority);
-            loco.afficherMessage("Réservation de la section partagée.");
+            loco.afficherMessage("Shared section requested.");
 
             // On attend le contact d'accès à la section partagée
             attendre_contact(sharedSectionAccessContact);
 
             // On réserve la section partagée
             sharedSection->access(loco);
-            loco.afficherMessage("Accès à la section partagée.");
+            loco.afficherMessage("Shared section accessed.");
 
             // On dirige les aiguillages pour que la locomotive puisse entrer dans la section partagée, et en sortir
             for(auto& direction : sharedSectionDirections) {
@@ -110,7 +110,7 @@ void LocomotiveBehavior::run()
             } else {
                 attendre_contact(exit);
             }
-            loco.afficherMessage("Entrée dans la section partagée.");
+            loco.afficherMessage("Shared section entered.");
 
             // On attend le contact de sortie de la section partagée
             if(directionIsForward && isWrittenForward || !directionIsForward && !isWrittenForward) {
@@ -118,11 +118,11 @@ void LocomotiveBehavior::run()
             } else {
                 attendre_contact(entrance);
             }
-            loco.afficherMessage("Sortie de la section partagée.");
+            loco.afficherMessage("Exit from shared section.");
 
             // On attend le contact de libération de la section partagée
             attendre_contact(sharedSectionReleaseContact);
-            loco.afficherMessage("Libération de la section partagée.");
+            loco.afficherMessage("Shared section liberated.");
 
             // On libère la section partagée
             sharedSection->leave(loco);
@@ -133,7 +133,7 @@ void LocomotiveBehavior::run()
 
             // Attendre le contact de la station
             attendre_contact(stationContact);
-            loco.afficherMessage("Arrivée à la gare.");
+            loco.afficherMessage("Arrived at the station.");
 
             // Réduire le nombre de tours restants
             --nbOfTurns;
@@ -149,13 +149,13 @@ void LocomotiveBehavior::run()
                 // Synchroniser avec l'autre locomotive à la gare.
                 // On attend que l'autre locomotive soit aussi à la gare, puis on attend deux secondes, 
                 // puis on démarre les deux locomotives dans le sens opposé
-                loco.afficherMessage("Arrêt en gare. Synchronisation...");
+                loco.afficherMessage("Stopped at station. Synchronizing...");
                 sharedStation->trainArrived();
 
                 // Inverser le sens
                 loco.inverserSens();
                 directionIsForward = !directionIsForward;
-                loco.afficherMessage("Inversion du sens.");
+                loco.afficherMessage("Reverse course.");
 
                 // Déterminer les nouveaux points de contact 
                 // (point de réservation et de libération de la section partagée)
@@ -176,13 +176,13 @@ void LocomotiveBehavior::run()
 }
 
 void LocomotiveBehavior::printStartMessage() {
-    qDebug() << "[START] Thread de la loco" << loco.numero() << "lancé";
-    loco.afficherMessage("Je suis lancée !");
+    qDebug() << "[START] Thread of loco number " << loco.numero() << " launched";
+    loco.afficherMessage("I am launched !");
 }
 
 void LocomotiveBehavior::printCompletionMessage() {
-    qDebug() << "[STOP] Thread de la loco" << loco.numero() << "a terminé correctement";
-    loco.afficherMessage("J'ai terminé");
+    qDebug() << "[STOP] Thread of loco number " << loco.numero() << "correctly stopped";
+    loco.afficherMessage("I've finished");
 }
 
 void LocomotiveBehavior::determineContactPoints() {
@@ -263,8 +263,16 @@ void LocomotiveBehavior::calculateEntranceAndExitIndexes() {
 
     // On vérifie que les contacts sont valides
     // Ils ne peuvent pas être égaux l'un à l'autre
-    if(entranceIndex == -1 || exitIndex == -1 || entranceIndex == exitIndex) {
-        throw std::runtime_error("Invalid contacts");
+    if(entranceIndex == -1) {
+        throw std::runtime_error("Invalid entrance contacts -- outside trajectory");
+    }
+
+    if(exitIndex == -1) {
+        throw std::runtime_error("Invalid exit contacts -- outside trajectory");
+    }
+
+    if(entranceIndex == exitIndex) {
+        throw std::runtime_error("Invalid entrance and exit contacts -- same contact");
     }
 }
 
@@ -274,7 +282,7 @@ void LocomotiveBehavior::setStationContact(int contact) {
 
     // On vérifie que le contact est dans la liste des contacts
     if(stationIndex == -1) {
-        throw std::runtime_error("Invalid station contact");
+        throw std::runtime_error("Invalid station contact -- outside trajectory");
     }
 
     // La station ne doit pas être dans la section partagée ou son buffer (dans notre solution),
@@ -309,31 +317,36 @@ void LocomotiveBehavior::setStationContact(int contact) {
 
     // On lance une exception si la station est dans la section partagée
     if (stationError) {
-        throw std::runtime_error("Invalid station contact");
+        throw std::runtime_error("Invalid station contact -- in shared section");
     }
 
     // La station ne doit pas être dans la zone tampon de la section partagée, dans le sens aller ou retour
     // On vérifie que la station n'est pas dans la zone tampon de la section partagée 
     // en avançant ou reculant dans la liste des contacts, selon le sens de la section partagée
     if(isWrittenForward) {
-        for(int i = 1; i <= std::max(INCOMING_BUFFER, OUTGOING_BUFFER); ++i) { 
+        for(int i = 1; i <= std::max(INCOMING_BUFFER, OUTGOING_BUFFER) && !stationError; ++i) { 
             // Vu qu'on veut l'aller-retour, on prend le max des deux buffers
             if(contacts[(stationIndex - i + contacts.size()) % contacts.size()] == exit) {
-                throw std::runtime_error("Invalid station contact");
+                stationError = true;
             }
-            if(contacts[(stationIndex + i) % contacts.size()] == entrance) {
-                throw std::runtime_error("Invalid station contact");
+            if(!stationError && contacts[(stationIndex + i) % contacts.size()] == entrance) {
+                stationError = true;
             }
         }
     } else {
-        for(int i = 1; i <= std::max(INCOMING_BUFFER, OUTGOING_BUFFER); ++i) {
+        for(int i = 1; i <= std::max(INCOMING_BUFFER, OUTGOING_BUFFER) && !stationError; ++i) {
             if(contacts[(stationIndex + i) % contacts.size()] == exit) {
-                throw std::runtime_error("Invalid station contact");
+                stationError = true;
             }
-            if(contacts[(stationIndex - i + contacts.size()) % contacts.size()] == entrance) {
-                throw std::runtime_error("Invalid station contact");
+            if(!stationError && contacts[(stationIndex - i + contacts.size()) % contacts.size()] == entrance) {
+                stationError = true;
             }
         }
+    }
+
+    // On lance une exception si la station est dans la zone tampon de la section partagée
+    if (stationError) {
+        throw std::runtime_error("Invalid station contact -- in shared section buffer");
     }
 
     // On fixe le contact de la station si tout est bon
@@ -351,18 +364,44 @@ bool LocomotiveBehavior::isGoingForward(int firstIndex, int secondIndex) {
 void LocomotiveBehavior::isStartingPositionValid(int firstIndex, int secondIndex) {
     // On vérifie que les index sont valides
     // Ils ne peuvent pas être égaux l'un à l'autre, ni égaux à l'entrée ou à la sortie de la section partagée
-    if(firstIndex == -1 || secondIndex == -1 || firstIndex == secondIndex || firstIndex == entranceIndex 
-    || firstIndex == exitIndex || secondIndex == entranceIndex || secondIndex == exitIndex) {
-        throw std::runtime_error("Invalid starting position");
+
+    if(firstIndex == -1) {
+        throw std::runtime_error("Invalid starting position -- first contact not in trajectory");
+    }
+
+    if(secondIndex == -1) {
+        throw std::runtime_error("Invalid starting position -- second contact not in trajectory");
+    }
+
+    if(firstIndex == secondIndex) {
+        throw std::runtime_error("Invalid starting position -- same contact");
+    }
+
+    if(firstIndex == entranceIndex) {
+        throw std::runtime_error("Invalid starting position -- first contact is entrance");
+    }
+
+    if(firstIndex == exitIndex) {
+        throw std::runtime_error("Invalid starting position -- first contact is exit");
+    }
+
+    if(secondIndex == entranceIndex) {
+        throw std::runtime_error("Invalid starting position -- second contact is entrance");
+    }
+
+    if(secondIndex == exitIndex) {
+        throw std::runtime_error("Invalid starting position -- second contact is exit");
     }
 
     // On vérifie que les index sont consécutifs
-    if(abs(firstIndex - secondIndex) != 1) {
-        throw std::runtime_error("Invalid starting position");
+    if(abs(firstIndex - secondIndex)  != 1 && abs(firstIndex - secondIndex) != contacts.size() - 1) {
+        throw std::runtime_error("Invalid starting position -- contacts are not consecutive");
     }
 
     // On obtient l'informationd de si la section partagée est coupée
     bool sharedSectionIsCut = isSharedSectionCut();
+
+    bool error = false;
 
     // On vérifie qu'on ne commence pas dans la section partagée 
     // (ni le contact juste avant la position de départ de la locomotive, ni le contact juste après)
@@ -372,14 +411,14 @@ void LocomotiveBehavior::isStartingPositionValid(int firstIndex, int secondIndex
             //et que la section partagée est écrite de gauche à droite
             if(firstIndex > entranceIndex || firstIndex < exitIndex 
             || secondIndex > entranceIndex || secondIndex < exitIndex) {
-                throw std::runtime_error("Invalid starting position");
+                error = true;
             }
         } else { 
             // Si la section partagée n'est pas coupée dans la liste des contacts 
             //et que la section partagée est écrite de gauche à droite
             if(firstIndex > entranceIndex && firstIndex < exitIndex 
             || secondIndex > entranceIndex && secondIndex < exitIndex) {
-                throw std::runtime_error("Invalid starting position");
+                error = true;
             }
         }
     } else {
@@ -388,16 +427,21 @@ void LocomotiveBehavior::isStartingPositionValid(int firstIndex, int secondIndex
             // et que la section partagée est écrite de droite à gauche
             if(firstIndex < entranceIndex || firstIndex > exitIndex 
             || secondIndex < entranceIndex || secondIndex > exitIndex) {
-                throw std::runtime_error("Invalid starting position");
+                error = true;
             }
         } else { 
             // Si la section partagée n'est pas coupée dans la liste des contacts 
             // et que la section partagée est écrite de droite à gauche
             if(firstIndex < entranceIndex && firstIndex > exitIndex 
             || secondIndex < entranceIndex && secondIndex > exitIndex) {
-                throw std::runtime_error("Invalid starting position");
+                error = true;
             }
         }
+    }
+
+    // On lance une exception si on commence dans la section partagée
+    if(error) {
+        throw std::runtime_error("Invalid starting position -- in shared section");
     }
 
     // On ne peut aussi pas être dans la zone tampon de la section partagée
@@ -412,29 +456,29 @@ void LocomotiveBehavior::isStartingPositionValid(int firstIndex, int secondIndex
             // On vérifie que la locomotive n'est pas dans la zone tampon de la section partagée
             // en avançant dans la liste des contacts depuis le contact juste devant la locomotive
             // et en vérifiant qu'on n'entre pas dans la section partagée (selon la taille du buffer)
-            for(int i = 1; i < INCOMING_BUFFER; ++i) {
+            for(int i = 1; i < INCOMING_BUFFER && !error; ++i) {
                 if(contacts[(secondIndex + i) % contacts.size()] == entrance) {
-                    throw std::runtime_error("Invalid starting position");
+                    error = true;
                 }
             }
             // Même chose, mais en reculant dans la liste des contacts depuis le contact juste derrière la locomotive
-            for(int i = 1; i < OUTGOING_BUFFER; ++i) {
+            for(int i = 1; i < OUTGOING_BUFFER && !error; ++i) {
                 if(contacts[(firstIndex - i + contacts.size()) % contacts.size()] == exit) {
-                    throw std::runtime_error("Invalid starting position");
+                    error = true;
                 }
             }
         } else { 
             // On effectue le même type de vérification, 
             // mais pour le cas où la section partagée est écrite de droite à gauche dans la liste des contacts,
             // mais que la locomotive va en avant
-            for(int i = 1; i < INCOMING_BUFFER; ++i) {
+            for(int i = 1; i < INCOMING_BUFFER && !error; ++i) {
                 if(contacts[(secondIndex + i) % contacts.size()] == exit) {
-                    throw std::runtime_error("Invalid starting position");
+                    error = true;
                 }
             }
-            for(int i = 1; i < OUTGOING_BUFFER; ++i) {
+            for(int i = 1; i < OUTGOING_BUFFER && !error; ++i) {
                 if(contacts[(firstIndex - i + contacts.size()) % contacts.size()] == entrance) {
-                    throw std::runtime_error("Invalid starting position");
+                    error = true;
                 }
             }
         }
@@ -442,31 +486,36 @@ void LocomotiveBehavior::isStartingPositionValid(int firstIndex, int secondIndex
         // On effectue le même type de vérification, mais pour le cas où la locomotive va en arrière, 
         //donc en sens inverse de la liste des contacts, mais que la section partagée est écrite de gauche à droite
         if(isWrittenForward) {
-            for(int i = 1; i < INCOMING_BUFFER; ++i) {
+            for(int i = 1; i < INCOMING_BUFFER && !error; ++i) {
                 if(contacts[(secondIndex - i + contacts.size()) % contacts.size()] == exit) {
-                    throw std::runtime_error("Invalid starting position");
+                    error = true;
                 }
             }
-            for(int i = 1; i < OUTGOING_BUFFER; ++i) {
+            for(int i = 1; i < OUTGOING_BUFFER && !error; ++i) {
                 if(contacts[(firstIndex + i) % contacts.size()] == entrance) {
-                    throw std::runtime_error("Invalid starting position");
+                    error = true;
                 }
             }
         } else { 
             // On effectue le même type de vérification, 
             // mais pour le cas où la section partagée est écrite de droite à gauche dans la liste des contacts, 
             // et que la locomotive va en arrière
-            for(int i = 1; i < INCOMING_BUFFER; ++i) {
+            for(int i = 1; i < INCOMING_BUFFER && !error; ++i) {
                 if(contacts[(secondIndex - i + contacts.size()) % contacts.size()] == entrance) {
-                    throw std::runtime_error("Invalid starting position");
+                    error = true;
                 }
             }
-            for(int i = 1; i < OUTGOING_BUFFER; ++i) {
+            for(int i = 1; i < OUTGOING_BUFFER && !error; ++i) {
                 if(contacts[(firstIndex + i) % contacts.size()] == exit) {
-                    throw std::runtime_error("Invalid starting position");
+                    error = true;
                 }
             }
         }
+    }
+
+    // On lance une exception si on commence dans la zone tampon de la section partagée
+    if(error) {
+        throw std::runtime_error("Invalid starting position -- in shared section buffer");
     }
 }
 
@@ -570,7 +619,7 @@ void LocomotiveBehavior::checkMinimalSizeOfContacts(int sizeOfSharedSection) {
     // car la station ne doit pas être dans la section partagée
     // ou la zone tampon de la section partagée non plus sur le chemin aller ou retour
     if (contacts.size() < sizeOfSharedSection + 2 * std::max(INCOMING_BUFFER, OUTGOING_BUFFER) + 1) {
-        throw std::runtime_error("Invalid shared section");
+        throw std::runtime_error("Invalid contacts size -- not enough contacts given the shared section size");
     }
 }
 

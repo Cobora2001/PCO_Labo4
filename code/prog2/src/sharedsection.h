@@ -30,7 +30,7 @@ public:
      */
     SharedSection() : mode(PriorityMode::HIGH_PRIORITY),
                     occupied(false), semaphore(1), mutex(), 
-                    nbRequests(0), waitingSemaphore(0) {}
+                    waitingSemaphore(0) {}
 
     /**
      * @brief request Méthode a appeler pour indiquer que la locomotive désire accéder à la
@@ -51,12 +51,11 @@ public:
         if (it == requestQueue.end()) { // Si la locomotive n'a pas encore fait de demande, c'est donc le cas normal
             // Ajoute la demande dans la file
             requestQueue.push_back({priority, locoId});
-            ++nbRequests;
-            loco.afficherMessage(QString("Locomotive %1 a demandé la section avec priorité %2.")
+            loco.afficherMessage(QString("Locomotive %1 asked for the shared section with a priority of %2.")
                                      .arg(locoId)
                                      .arg(priority));
         } else { // On ne devrait pas arriver ici
-            loco.afficherMessage(QString("Locomotive %1 a déjà une demande active.").arg(locoId));
+            loco.afficherMessage(QString("Locomotive %1 already has an active request.").arg(locoId));
         }
 
         // Trie la file en fonction du mode de priorité
@@ -93,11 +92,11 @@ public:
             // vu qu'au moins la locomotive actuelle devrait être dedans
             if(requestQueue.empty()) {
                 mutex.unlock();
-                throw std::runtime_error("No request in the queue");
+                throw std::runtime_error("No request in the queue while accessing");
             }
 
-            // Vérifie si la section partagée est occupée
-            if(occupied) {
+            // Vérifie si la section partagée est occupée, ou si la locomotive actuelle n'est pas la plus prioritaire
+            if(occupied || requestQueue.front().second != loco.numero()) {
                 // On ne gère plus que des variables locales, on peut donc déverrouiller le mutex
                 mutex.unlock();
                 // Si on n'a pas déjà arrêté la locomotive, on le fait
@@ -109,40 +108,23 @@ public:
                 // On attend que la section partagée soit libérée et qu'on nous réveille
                 waitingSemaphore.acquire();
             } else {
-                // Vérifie si la locomotive actuelle est la prochaine à accéder à la section partagée
-                if (requestQueue.front().second == loco.numero()) {
-                    // On mémorise qu'on va pouvoir accéder à la section partagée
-                    occupied = true;
-                    // On retire notre demande de la file
-                    requestQueue.erase(requestQueue.begin());
-                    // On décrémente le nombre de demandes, vu qu'on a retiré la nôtre
-                    // (On n'a pas besoin de cette variable, on peut gérer ça avec la taille de la file...)
-                    --nbRequests;
-                    // On ne gère plus que des variables locales, on peut donc déverrouiller le mutex
-                    mutex.unlock();
-                    // On mémorise qu'on peut sortir de la boucle
-                    canContinue = true;
-                    // Si on a dû arrêter la locomotive, on la redémarre
-                    if(hadToStop) {
-                        loco.fixerVitesse(vitesse);
-                    }
-                    // On accède à la section partagée
-                    semaphore.acquire();
-                } else {
-                    // On ne gère plus que des variables locales, on peut donc déverrouiller le mutex
-                    mutex.unlock();
-                    // Si on n'a pas déjà arrêté la locomotive, on le fait
-                    if(!hadToStop) {
-                        loco.fixerVitesse(0);
-                    }
-                    // On mémorise qu'on a dû arrêter la locomotive
-                    hadToStop = true;
-                    // On attend que la section partagée soit libérée et qu'on nous réveille
-                    waitingSemaphore.acquire();
+                // On mémorise qu'on va pouvoir accéder à la section partagée
+                occupied = true;
+                // On retire notre demande de la file
+                requestQueue.erase(requestQueue.begin());
+                // On ne gère plus que des variables locales, on peut donc déverrouiller le mutex
+                mutex.unlock();
+                // On mémorise qu'on peut sortir de la boucle
+                canContinue = true;
+                // Si on a dû arrêter la locomotive, on la redémarre
+                if(hadToStop) {
+                    loco.fixerVitesse(vitesse);
                 }
+                // On accède à la section partagée
+                semaphore.acquire();
             }
         }
-        loco.afficherMessage(QString("Locomotive %1 accède à la section partagée.").arg(loco.numero()));
+        loco.afficherMessage(QString("Locomotive %1 accesses to the shared section.").arg(loco.numero()));
     }
 
     /**
@@ -156,8 +138,11 @@ public:
         // On a quitte la section partagée
         occupied = false;
 
+        // On mémorise la taille de la queue afin de ne pas avoir à la recalculer à chaque itération
+        int size = requestQueue.size();
+
         // On réveille les locomotives en attente
-        for(int i = 0; i < nbRequests; ++i) {
+        for(int i = 0; i < size; ++i) {
             waitingSemaphore.release();
         }
 
@@ -229,8 +214,6 @@ private:
      * @brief requestQueue File d'attente des requêtes pour la section partagée
      */
     std::deque<std::pair<int, int>> requestQueue;
-
-    int nbRequests;
 };
 
 

@@ -61,6 +61,10 @@ int cmain()
     // Vous devrez utiliser cette fonction pour la section partagée pour aiguiller les locos
     // sur le bon parcours (par exemple à la sortie de la section partagée) vous pouvez l'
     // appeler depuis vos thread des locos par ex.
+
+    // Les aiguillages ont été défini de tel sorte à ce qu'il marche avec notre test
+    // Si vous voulez changer les trajectoires des trains, vous devez changer les directions des aiguillages
+    // par la même occasion
     diriger_aiguillage(1,  TOUT_DROIT, 0); // Train 1
     diriger_aiguillage(2,  DEVIE     , 0); // Train 0
     diriger_aiguillage(3,  DEVIE     , 0); // Train 0
